@@ -1,65 +1,975 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useState, useEffect, useRef, useCallback, type ReactNode } from 'react';
+import { usePrivy, useWallets } from '@privy-io/react-auth';
+import { createPublicClient, http, formatUnits, type Address } from 'viem';
+import { monad } from '@/lib/monad';
+import {
+  WMON_ADDRESS,
+  TURBO_COHORT_ADDRESS,
+  WMON_ABI,
+  TURBO_COHORT_ABI,
+  TIERS,
+} from '@/lib/contracts';
+
+const publicClient = createPublicClient({
+  chain: monad,
+  transport: http(),
+});
+
+/* ── Data ── */
+
+const PHASES = [
+  {
+    num: '01',
+    months: '1 – 4',
+    title: 'Foundations',
+    accent: '#06b6d4',
+    items: [
+      'Web3 fundamentals & Monad ecosystem',
+      'Product discovery & validation',
+      'Smart contract development basics',
+      'Team formation & culture building',
+    ],
+  },
+  {
+    num: '02',
+    months: '5 – 8',
+    title: 'Build & Ship',
+    accent: '#8b5cf6',
+    items: [
+      'MVP development sprints',
+      'User acquisition strategies',
+      'Tokenomics & governance design',
+      'Technical architecture reviews',
+    ],
+  },
+  {
+    num: '03',
+    months: '9 – 12',
+    title: 'Scale & Demo',
+    accent: '#f59e0b',
+    items: [
+      'Growth hacking & metrics',
+      'Pitch deck refinement',
+      'Demo Day preparation',
+      'NITRO application coaching',
+    ],
+  },
+] as const;
+
+const FAQS = [
+  {
+    q: 'Who is TURBO for?',
+    a: 'Aspiring Web3 founders in Latin America who want structured mentorship, community, and a path to building real products. Whether you\'re a developer, designer, or business mind — if you want to build on Monad, TURBO is your launchpad.',
+  },
+  {
+    q: 'What happens after the 12 months?',
+    a: 'Graduates will be well-prepared to apply for Monad\'s NITRO, which provides $500,000 USD per team. TURBO gives you the skills, portfolio, and network to stand out.',
+  },
+  {
+    q: 'How do I become a TURBO candidate?',
+    a: 'Step 1: Register on Bybit using referral code BPYPARJ. Step 2: Join the EmpowerToursEdu Telegram channel. Step 3: Fill out the application form on this page.',
+  },
+  {
+    q: 'Is TURBO only in Spanish?',
+    a: 'Primary content is in Spanish with English resources available. Mentorship sessions can be in either language. We believe in building bridges between LATAM and global Web3.',
+  },
+  {
+    q: 'What\'s the difference between TURBO and NITRO?',
+    a: 'TURBO is the training ground. NITRO is the destination. TURBO (by EmpowerTours) builds your skills and community over 12 months. NITRO (by Monad) is a 3-month elite program with $500K USD for 15 selected teams.',
+  },
+  {
+    q: 'Do I need coding experience?',
+    a: 'No. TURBO is designed to take you from zero to builder. With AI-powered vibe coding, anyone with drive can build real products. We\'ll teach you everything you need.',
+  },
+];
+
+const STEPS = [
+  {
+    num: '01',
+    color: '#f59e0b',
+    title: 'Register on Bybit',
+    desc: 'Create your Bybit account using our referral code to become a TURBO candidate.',
+    cta: 'Use code: BPYPARJ',
+    link: '#',
+  },
+  {
+    num: '02',
+    color: '#06b6d4',
+    title: 'Join Telegram',
+    desc: 'Enter the EmpowerToursEdu channel — your hub for updates, community, and resources.',
+    cta: 'Join channel',
+    link: 'https://t.me/+D2lwIqbJT1tmZTMx',
+  },
+  {
+    num: '03',
+    color: '#8b5cf6',
+    title: 'Apply below',
+    desc: 'Fill out the application form and tell us what you want to build. We\'ll take it from there.',
+    cta: 'Scroll to apply',
+    link: '#apply',
+  },
+];
+
+/* ── Scroll reveal hook ── */
+
+function Reveal({ children, className = '', delay = 0 }: { children: ReactNode; className?: string; delay?: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting) {
+          el.classList.add('visible');
+          obs.unobserve(el);
+        }
+      },
+      { threshold: 0.1 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div ref={ref} className={`reveal ${className}`} style={{ transitionDelay: `${delay}ms` }}>
+      {children}
+    </div>
+  );
+}
+
+/* ── Check icon ── */
+
+function Check({ color }: { color: string }) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="flex-shrink-0 mt-0.5">
+      <path d="M3.5 8.5L6.5 11.5L12.5 4.5" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/* ── Label ── */
+
+function Label({ color, children }: { color: string; children: ReactNode }) {
+  return (
+    <span
+      className="syne inline-block text-[11px] font-semibold tracking-[0.15em] uppercase mb-6"
+      style={{ color }}
+    >
+      {children}
+    </span>
+  );
+}
+
+/* ── Helpers ── */
+
+// Minimal ABI encoding for approve(address,uint256) and payMonthly(uint8)
+function encodeFunctionCall(fn: string, args: (string | number)[]): string {
+  if (fn === 'approve') {
+    // approve(address,uint256)
+    const selector = '0x095ea7b3';
+    const addr = (args[0] as string).slice(2).padStart(64, '0');
+    const amount = (args[1] as string).slice(2).padStart(64, '0');
+    return selector + addr + amount;
+  }
+  if (fn === 'payMonthly') {
+    // payMonthly(uint8)
+    const selector = '0x4b7f039b';
+    const tier = (args[0] as number).toString(16).padStart(64, '0');
+    return selector + tier;
+  }
+  return '0x';
+}
+
+async function waitForTx(hash: string): Promise<void> {
+  const receipt = await publicClient.waitForTransactionReceipt({
+    hash: hash as `0x${string}`,
+  });
+  if (receipt.status === 'reverted') {
+    throw new Error('Transaction reverted');
+  }
+}
+
+/* ── Page ── */
+
+export default function TurboPage() {
+  const { login, authenticated, ready } = usePrivy();
+  const { wallets } = useWallets();
+
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [form, setForm] = useState({ name: '', email: '', twitter: '', bybit: '', why: '', tier: 'builder' });
+  const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [boost, setBoost] = useState(0);
+
+  // On-chain payment state
+  const [payStep, setPayStep] = useState<'idle' | 'approving' | 'paying' | 'success' | 'error'>('idle');
+  const [payError, setPayError] = useState('');
+  const [payResult, setPayResult] = useState<{ txHash: string; amount: string } | null>(null);
+  const [wmonBalance, setWmonBalance] = useState<string | null>(null);
+  const [tierPrice, setTierPrice] = useState<bigint | null>(null);
+
+  const connectedWallet = wallets[0];
+  const walletAddress = connectedWallet?.address as Address | undefined;
+
+  // Fetch WMON balance and tier price when wallet connects or tier changes
+  const fetchBalanceAndPrice = useCallback(async () => {
+    if (!walletAddress) return;
+    try {
+      const [balance, price] = await Promise.all([
+        publicClient.readContract({
+          address: WMON_ADDRESS,
+          abi: WMON_ABI,
+          functionName: 'balanceOf',
+          args: [walletAddress],
+        }),
+        publicClient.readContract({
+          address: TURBO_COHORT_ADDRESS,
+          abi: TURBO_COHORT_ABI,
+          functionName: 'tierPrice',
+          args: [TIERS[form.tier]],
+        }),
+      ]);
+      setWmonBalance(formatUnits(balance, 18));
+      setTierPrice(price);
+    } catch {
+      // silently fail
+    }
+  }, [walletAddress, form.tier]);
+
+  useEffect(() => {
+    fetchBalanceAndPrice();
+  }, [fetchBalanceAndPrice]);
+
+  const handlePayment = async () => {
+    if (!walletAddress || !connectedWallet || !tierPrice) return;
+
+    setPayStep('approving');
+    setPayError('');
+
+    try {
+      // Get the wallet provider
+      const provider = await connectedWallet.getEthereumProvider();
+
+      // Check current allowance
+      const allowance = await publicClient.readContract({
+        address: WMON_ADDRESS,
+        abi: WMON_ABI,
+        functionName: 'allowance',
+        args: [walletAddress, TURBO_COHORT_ADDRESS],
+      });
+
+      // Approve if needed
+      if (allowance < tierPrice) {
+        const approveTx = await provider.request({
+          method: 'eth_sendTransaction',
+          params: [{
+            from: walletAddress,
+            to: WMON_ADDRESS,
+            data: encodeFunctionCall('approve', [TURBO_COHORT_ADDRESS, '0x' + tierPrice.toString(16)]),
+          }],
+        });
+
+        // Wait for approval confirmation
+        await waitForTx(approveTx as string);
+      }
+
+      setPayStep('paying');
+
+      // Send payMonthly transaction
+      const tierNum = TIERS[form.tier];
+      const payTx = await provider.request({
+        method: 'eth_sendTransaction',
+        params: [{
+          from: walletAddress,
+          to: TURBO_COHORT_ADDRESS,
+          data: encodeFunctionCall('payMonthly', [tierNum]),
+        }],
+      });
+
+      // Wait for payment confirmation
+      await waitForTx(payTx as string);
+
+      setPayResult({ txHash: payTx as string, amount: formatUnits(tierPrice, 18) });
+      setPayStep('success');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Payment failed';
+      setPayError(message.includes('user rejected') ? 'Transaction was rejected.' : message);
+      setPayStep('error');
+    }
+  };
+
+  useEffect(() => {
+    document.body.style.backgroundColor = '#060608';
+    return () => { document.body.style.backgroundColor = ''; };
+  }, []);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const pct = window.scrollY / (document.body.scrollHeight - window.innerHeight);
+      setBoost(Math.min(Math.max(pct, 0), 1));
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  return (
+    <div className="turbo-page">
+      {/* Scroll progress */}
+      <div className="boost-bar">
+        <div className="boost-fill" style={{ height: `${boost * 100}%` }} />
+      </div>
+
+      {/* HERO */}
+      <header className="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden">
+        <div className="orb" style={{ width: 500, height: 500, background: '#06b6d4', opacity: 0.08, top: '-5%', left: '15%' }} />
+        <div className="orb" style={{ width: 400, height: 400, background: '#8b5cf6', opacity: 0.06, bottom: '5%', right: '10%' }} />
+
+        <div className="relative z-10 text-center max-w-4xl mx-auto">
+          <p className="syne hero-enter hero-enter-d1 text-[11px] tracking-[0.4em] uppercase text-zinc-600 font-semibold mb-8">
+            by EmpowerTours
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+          <h1
+            className="syne hero-enter hero-enter-d2 font-extrabold leading-[0.9] mb-6"
+            style={{ fontSize: 'clamp(4.5rem, 14vw, 12rem)' }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            <span className="gt">TURBO</span>
+          </h1>
+
+          <p className="hero-enter hero-enter-d3 text-lg md:text-xl text-zinc-500 mb-10 max-w-md mx-auto">
+            The launchpad to <span className="syne font-bold text-purple-400">NITRO</span>.
+            <br />
+            <span className="text-zinc-600">Train. Build. Fund.</span>
+          </p>
+
+          {/* Stats */}
+          <div className="hero-enter hero-enter-d4 flex flex-wrap justify-center gap-10 md:gap-16 mb-12">
+            {[
+              { v: '12', l: 'Months' },
+              { v: 'LATAM', l: 'First' },
+              { v: 'AI', l: 'Powered' },
+              { v: '$500K', l: 'USD via NITRO' },
+            ].map((s) => (
+              <div key={s.l} className="text-center">
+                <div className="syne text-2xl md:text-3xl font-bold gt">{s.v}</div>
+                <div className="text-[10px] tracking-[0.2em] uppercase text-zinc-700 mt-1">{s.l}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="hero-enter hero-enter-d4 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a href="#register" className="cta-primary">Get Started</a>
+            <a href="#about" className="cta-secondary">Learn More</a>
+          </div>
         </div>
-      </main>
+
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 text-zinc-800 flex flex-col items-center gap-2">
+          <div className="w-px h-10 bg-gradient-to-b from-zinc-700/50 to-transparent" />
+        </div>
+      </header>
+
+      {/* ABOUT */}
+      <section id="about" className="py-28 md:py-36 px-6">
+        <div className="max-w-4xl mx-auto">
+          <Reveal>
+            <Label color="#06b6d4">What is TURBO</Label>
+            <h2 className="syne text-3xl md:text-5xl font-bold text-white leading-tight mb-8">
+              Your <span className="gt">12-month</span> runway<br className="hidden md:block" />
+              to Web3 mastery.
+            </h2>
+          </Reveal>
+
+          <Reveal delay={100}>
+            <div className="grid md:grid-cols-2 gap-8 text-zinc-400 text-[15px] leading-relaxed mb-14">
+              <p>
+                TURBO is EmpowerTours&apos; intensive 12-month program designed for aspiring Web3 founders in Latin America. Go from idea to product — with mentorship, community, and real support behind you.
+              </p>
+              <p>
+                The end goal? Graduates emerge ready to apply for Monad&apos;s{' '}
+                <span className="text-purple-400 font-medium">NITRO</span>,
+                which awards <span className="text-amber-400 font-medium">$500,000 USD</span> per team. TURBO is the training ground. NITRO is the destination.
+              </p>
+            </div>
+          </Reveal>
+
+          <Reveal delay={200}>
+            <div className="grid sm:grid-cols-3 gap-5">
+              {[
+                { title: 'Community-powered', desc: 'A collective of builders funding and supporting each other', color: '#06b6d4' },
+                { title: 'NITRO-aligned', desc: 'Curriculum mirrors what NITRO selectors look for', color: '#8b5cf6' },
+                { title: 'LATAM-first', desc: 'Built for Latin American founders, taught in Spanish & English', color: '#f59e0b' },
+              ].map((item) => (
+                <div key={item.title} className="p-5 rounded-xl border border-zinc-800/60 bg-zinc-900/20">
+                  <div className="w-2 h-2 rounded-full mb-4" style={{ background: item.color }} />
+                  <div className="syne font-bold text-white text-sm mb-1">{item.title}</div>
+                  <div className="text-xs text-zinc-500 leading-relaxed">{item.desc}</div>
+                </div>
+              ))}
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      <div className="divider mx-6" />
+
+      {/* PROGRAM STRUCTURE */}
+      <section className="py-28 md:py-36 px-6">
+        <div className="max-w-5xl mx-auto">
+          <Reveal>
+            <Label color="#8b5cf6">Program Structure</Label>
+            <h2 className="syne text-3xl md:text-5xl font-bold text-white leading-tight mb-14">
+              Three phases. <span className="gt">One trajectory.</span>
+            </h2>
+          </Reveal>
+
+          <div className="grid md:grid-cols-3 gap-5">
+            {PHASES.map((phase, i) => (
+              <Reveal key={phase.num} delay={i * 120}>
+                <div className="phase-card" style={{ '--accent-color': phase.accent } as React.CSSProperties}>
+                  <div className="syne text-[10px] tracking-[0.2em] uppercase text-zinc-600 mb-1">
+                    Months {phase.months}
+                  </div>
+                  <div className="flex items-baseline gap-3 mb-5">
+                    <span className="syne text-4xl font-extrabold" style={{ color: phase.accent, opacity: 0.15 }}>
+                      {phase.num}
+                    </span>
+                    <h3 className="syne text-xl font-bold text-white">{phase.title}</h3>
+                  </div>
+                  <ul className="space-y-2.5">
+                    {phase.items.map((item) => (
+                      <li key={item} className="flex items-start gap-2.5 text-[13px] text-zinc-400">
+                        <div className="w-1 h-1 rounded-full mt-2 flex-shrink-0" style={{ background: phase.accent }} />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <div className="divider mx-6" />
+
+      {/* TIERED PRICING */}
+      <section className="py-28 md:py-36 px-6">
+        <div className="max-w-5xl mx-auto">
+          <Reveal>
+            <Label color="#f59e0b">Membership Tiers</Label>
+            <h2 className="syne text-3xl md:text-5xl font-bold text-white leading-tight mb-4">
+              Choose your <span className="gt">level.</span>
+            </h2>
+            <p className="text-zinc-500 text-[15px] mb-14 max-w-lg">
+              Every tier gets you closer to NITRO. Your monthly contribution fuels the community pool that funds graduating founders.
+            </p>
+          </Reveal>
+
+          <div className="grid md:grid-cols-3 gap-5">
+            {/* Explorer */}
+            <Reveal delay={0}>
+              <div className="tier-card">
+                <div className="w-2 h-2 rounded-full mb-4" style={{ background: '#06b6d4' }} />
+                <div className="syne text-[10px] tracking-[0.2em] uppercase text-zinc-600 mb-1">Tier 1</div>
+                <h3 className="syne text-xl font-bold text-white mb-1">Explorer</h3>
+                <div className="flex items-baseline gap-1 mb-6">
+                  <span className="syne text-3xl font-extrabold" style={{ color: '#06b6d4' }}>$50</span>
+                  <span className="text-zinc-600 text-sm">MXN/mo</span>
+                </div>
+                <ul className="space-y-3 flex-1">
+                  {['Community access', 'Weekly workshops', 'Discord channels', 'Monthly AMAs'].map((item) => (
+                    <li key={item} className="flex items-start gap-2.5 text-[13px] text-zinc-400">
+                      <Check color="#06b6d4" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <a href="#apply" className="cta-secondary w-full mt-8 text-center">Join as Explorer</a>
+              </div>
+            </Reveal>
+
+            {/* Builder */}
+            <Reveal delay={120}>
+              <div className="tier-card popular">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                  <span className="syne text-[9px] font-bold tracking-[0.15em] uppercase bg-purple-500 text-black px-3 py-1 rounded-full">
+                    Most Popular
+                  </span>
+                </div>
+                <div className="w-2 h-2 rounded-full mb-4" style={{ background: '#8b5cf6' }} />
+                <div className="syne text-[10px] tracking-[0.2em] uppercase text-zinc-600 mb-1">Tier 2</div>
+                <h3 className="syne text-xl font-bold text-white mb-1">Builder</h3>
+                <div className="flex items-baseline gap-1 mb-6">
+                  <span className="syne text-3xl font-extrabold" style={{ color: '#8b5cf6' }}>$200</span>
+                  <span className="text-zinc-600 text-sm">MXN/mo</span>
+                </div>
+                <ul className="space-y-3 flex-1">
+                  {[
+                    'Everything in Explorer',
+                    '1:1 mentorship sessions',
+                    'Code reviews & feedback',
+                    'Builder cohort channels',
+                    'Priority NITRO prep',
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-2.5 text-[13px] text-zinc-400">
+                      <Check color="#8b5cf6" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <a href="#apply" className="cta-primary w-full mt-8 text-center">Join as Builder</a>
+              </div>
+            </Reveal>
+
+            {/* Founder */}
+            <Reveal delay={240}>
+              <div className="tier-card">
+                <div className="w-2 h-2 rounded-full mb-4" style={{ background: '#f59e0b' }} />
+                <div className="syne text-[10px] tracking-[0.2em] uppercase text-zinc-600 mb-1">Tier 3</div>
+                <h3 className="syne text-xl font-bold text-white mb-1">Founder</h3>
+                <div className="flex items-baseline gap-1 mb-6">
+                  <span className="syne text-3xl font-extrabold" style={{ color: '#f59e0b' }}>$500</span>
+                  <span className="text-zinc-600 text-sm">MXN/mo</span>
+                </div>
+                <ul className="space-y-3 flex-1">
+                  {[
+                    'Everything in Builder',
+                    'Direct funding eligibility',
+                    'VC introductions',
+                    'Demo Day slot',
+                    'NITRO application support',
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-2.5 text-[13px] text-zinc-400">
+                      <Check color="#f59e0b" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <a href="#apply" className="cta-secondary w-full mt-8 text-center">Join as Founder</a>
+              </div>
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
+      <div className="divider mx-6" />
+
+      {/* TURBO -> NITRO */}
+      <section className="py-28 md:py-36 px-6 relative overflow-hidden">
+        <div className="orb" style={{ width: 600, height: 300, background: '#8b5cf6', opacity: 0.04, top: '30%', left: '50%', transform: 'translateX(-50%)' }} />
+
+        <div className="max-w-4xl mx-auto relative z-10">
+          <Reveal>
+            <Label color="#06b6d4">The Pipeline</Label>
+            <h2 className="syne text-3xl md:text-5xl font-bold text-white leading-tight mb-14">
+              From <span className="gt">TURBO</span> to <span className="text-purple-400">NITRO</span>.
+            </h2>
+          </Reveal>
+
+          <Reveal delay={150}>
+            <div className="grid md:grid-cols-[1fr_auto_1fr] gap-6 items-stretch">
+              <div className="pipeline-box" style={{ borderColor: 'rgba(6,182,212,0.15)' }}>
+                <div className="syne text-2xl font-extrabold gt mb-1">TURBO</div>
+                <div className="text-[10px] tracking-[0.2em] uppercase text-zinc-600 mb-5">By EmpowerTours</div>
+                <ul className="space-y-2 text-[13px] text-zinc-400">
+                  <li>12-month program</li>
+                  <li>Community-funded</li>
+                  <li>Mentorship + community</li>
+                  <li>LATAM-focused</li>
+                </ul>
+              </div>
+
+              <div className="hidden md:flex flex-col items-center justify-center gap-1 px-2">
+                <div className="text-[9px] tracking-[0.15em] uppercase text-zinc-700 syne">Graduate</div>
+                <svg width="40" height="16" viewBox="0 0 40 16" fill="none">
+                  <path d="M0 8h32M28 3l6 5-6 5" stroke="#52525b" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <div className="text-[9px] tracking-[0.15em] uppercase text-zinc-700 syne">Apply</div>
+              </div>
+
+              <div className="pipeline-box" style={{ borderColor: 'rgba(139,92,246,0.15)' }}>
+                <div className="syne text-2xl font-extrabold text-purple-400 mb-1">NITRO</div>
+                <div className="text-[10px] tracking-[0.2em] uppercase text-zinc-600 mb-5">By Monad</div>
+                <ul className="space-y-2 text-[13px] text-zinc-400">
+                  <li>3-month elite program</li>
+                  <li className="text-amber-400 font-medium">$500,000 USD per team</li>
+                  <li>15 selected teams worldwide</li>
+                  <li>Top-tier VC access</li>
+                </ul>
+              </div>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      <div className="divider mx-6" />
+
+      {/* FUNDING MODEL */}
+      <section className="py-28 md:py-36 px-6 relative overflow-hidden">
+        <div className="orb" style={{ width: 500, height: 300, background: '#f59e0b', opacity: 0.03, top: '20%', right: '10%' }} />
+
+        <div className="max-w-4xl mx-auto relative z-10">
+          <Reveal>
+            <Label color="#f59e0b">Funding Model</Label>
+            <h2 className="syne text-3xl md:text-5xl font-bold text-white leading-tight mb-4">
+              Community-powered <span className="gt">capital.</span>
+            </h2>
+            <p className="text-zinc-500 text-[15px] mb-14 max-w-xl">
+              TURBO is not venture-backed. It&apos;s collectively funded by its own members. Every monthly payment feeds the Founders Club pool.
+            </p>
+          </Reveal>
+
+          <Reveal delay={100}>
+            <div className="p-8 md:p-12 rounded-2xl border border-zinc-800/60 bg-zinc-900/20 text-center">
+              <div className="syne text-5xl md:text-7xl font-extrabold gt mb-3">500,000</div>
+              <div className="syne text-lg md:text-xl font-bold text-zinc-400 mb-8">MXN Founders Club Pool</div>
+
+              <div className="grid sm:grid-cols-3 gap-6 text-center mb-10">
+                <div>
+                  <div className="syne text-2xl font-bold text-white">340</div>
+                  <div className="text-[11px] tracking-[0.12em] uppercase text-zinc-600 mt-1">Members contribute</div>
+                </div>
+                <div>
+                  <div className="syne text-2xl font-bold text-white">12</div>
+                  <div className="text-[11px] tracking-[0.12em] uppercase text-zinc-600 mt-1">Months of payments</div>
+                </div>
+                <div>
+                  <div className="syne text-2xl font-bold text-white">~5</div>
+                  <div className="text-[11px] tracking-[0.12em] uppercase text-zinc-600 mt-1">Founders funded</div>
+                </div>
+              </div>
+
+              <div className="max-w-md mx-auto">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="h-2 flex-1 rounded-full bg-zinc-800 overflow-hidden">
+                    <div className="h-full rounded-full" style={{ width: '95%', background: 'linear-gradient(90deg, #06b6d4, #8b5cf6)' }} />
+                  </div>
+                  <span className="syne text-[11px] font-bold text-zinc-500">95%</span>
+                </div>
+                <div className="flex justify-between text-[10px] tracking-[0.1em] uppercase text-zinc-700">
+                  <span>Community Pool</span>
+                  <span>5% Treasury</span>
+                </div>
+              </div>
+
+              <p className="text-[13px] text-zinc-600 mt-8 max-w-sm mx-auto leading-relaxed">
+                Each graduating founder receives ~100,000 MXN from the community pool to launch their project.
+              </p>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      <div className="divider mx-6" />
+
+      {/* HOW TO REGISTER */}
+      <section id="register" className="py-28 md:py-36 px-6">
+        <div className="max-w-4xl mx-auto">
+          <Reveal>
+            <Label color="#f59e0b">How to Join</Label>
+            <h2 className="syne text-3xl md:text-5xl font-bold text-white leading-tight mb-4">
+              Three steps to <span className="gt">get started.</span>
+            </h2>
+            <p className="text-zinc-500 text-[15px] mb-14 max-w-lg">
+              Becoming a TURBO candidate is simple. Complete these steps and you&apos;re in the pipeline.
+            </p>
+          </Reveal>
+
+          <div className="grid md:grid-cols-3 gap-5">
+            {STEPS.map((step, i) => (
+              <Reveal key={step.num} delay={i * 120}>
+                <div className="phase-card" style={{ '--accent-color': step.color } as React.CSSProperties}>
+                  <span className="syne text-4xl font-extrabold" style={{ color: step.color, opacity: 0.15 }}>
+                    {step.num}
+                  </span>
+                  <h3 className="syne text-lg font-bold text-white mt-2 mb-3">{step.title}</h3>
+                  <p className="text-[13px] text-zinc-500 leading-relaxed mb-5">{step.desc}</p>
+                  <a
+                    href={step.link}
+                    target={step.link.startsWith('http') ? '_blank' : undefined}
+                    rel={step.link.startsWith('http') ? 'noopener noreferrer' : undefined}
+                    className="inline-block syne text-[11px] font-bold tracking-[0.08em] uppercase py-2 px-4 rounded-lg transition-all duration-200 hover:brightness-110"
+                    style={{ background: `${step.color}15`, color: step.color }}
+                  >
+                    {step.cta}
+                  </a>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <div className="divider mx-6" />
+
+      {/* FAQ */}
+      <section className="py-28 md:py-36 px-6">
+        <div className="max-w-2xl mx-auto">
+          <Reveal>
+            <Label color="#71717a">FAQ</Label>
+            <h2 className="syne text-3xl md:text-4xl font-bold text-white mb-10">
+              Got questions?
+            </h2>
+          </Reveal>
+
+          <div className="space-y-2">
+            {FAQS.map((faq, i) => (
+              <Reveal key={i} delay={i * 60}>
+                <div className="faq-item">
+                  <button
+                    onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                    className="w-full flex items-center justify-between gap-4 p-5 text-left bg-transparent border-none cursor-pointer"
+                  >
+                    <span className="syne font-semibold text-[14px] text-zinc-300">{faq.q}</span>
+                    <svg
+                      width="16" height="16" viewBox="0 0 16 16" fill="none"
+                      className="flex-shrink-0 transition-transform duration-300"
+                      style={{ transform: openFaq === i ? 'rotate(45deg)' : 'none' }}
+                    >
+                      <path d="M8 3v10M3 8h10" stroke="#52525b" strokeWidth="1.5" strokeLinecap="round" />
+                    </svg>
+                  </button>
+                  <div className={`faq-answer ${openFaq === i ? 'open' : ''}`}>
+                    <p className="text-[13px] text-zinc-500 leading-relaxed">{faq.a}</p>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <div className="divider mx-6" />
+
+      {/* APPLY */}
+      <section id="apply" className="py-28 md:py-36 px-6 relative">
+        <div className="orb" style={{ width: 400, height: 400, background: '#06b6d4', opacity: 0.04, bottom: 0, left: '50%', transform: 'translateX(-50%)' }} />
+
+        <div className="max-w-lg mx-auto relative z-10">
+          <Reveal>
+            <div className="text-center mb-10">
+              <Label color="#06b6d4">Apply</Label>
+              <h2 className="syne text-3xl md:text-4xl font-bold text-white mb-3">
+                Ready to go <span className="gt">full throttle?</span>
+              </h2>
+              <p className="text-zinc-600 text-sm">Cohort 1 applications are open. Limited spots.</p>
+            </div>
+          </Reveal>
+
+          {submitted ? (
+            <Reveal>
+              <div className="text-center p-8 rounded-2xl border border-cyan-500/15 bg-cyan-500/[0.03] mb-6">
+                <div className="syne text-xl font-bold gt mb-2">Application Received</div>
+                <p className="text-zinc-500 text-sm mb-4">
+                  We&apos;ll review your application and get back to you within 48 hours.
+                  Make sure you&apos;ve completed steps 1 &amp; 2 above!
+                </p>
+              </div>
+
+              {/* On-chain payment section */}
+              <div className="p-6 rounded-2xl border border-zinc-800/60 bg-zinc-900/20">
+                <div className="syne text-sm font-bold text-white mb-1">Make Your First Payment</div>
+                <p className="text-zinc-600 text-[12px] mb-5">
+                  Pay your monthly {form.tier.charAt(0).toUpperCase() + form.tier.slice(1)} tier fee in WMON on Monad.
+                </p>
+
+                {payStep === 'success' && payResult ? (
+                  <div className="text-center p-6 rounded-xl border border-green-500/15 bg-green-500/[0.03]">
+                    <div className="syne text-lg font-bold text-green-400 mb-1">Payment Confirmed</div>
+                    <p className="text-zinc-500 text-xs mb-3">{payResult.amount} WMON paid. Your membership NFT has been minted.</p>
+                    <a
+                      href={`https://monadscan.com/tx/${payResult.txHash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block text-[11px] syne font-bold tracking-[0.08em] uppercase py-2 px-4 rounded-lg bg-green-500/10 text-green-400 hover:brightness-110 transition-all"
+                    >
+                      View on MonadScan
+                    </a>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Wallet connection via Privy */}
+                    {ready && !authenticated ? (
+                      <button
+                        type="button"
+                        onClick={login}
+                        className="cta-primary w-full"
+                      >
+                        Connect Wallet
+                      </button>
+                    ) : walletAddress ? (
+                      <>
+                        <div className="p-3 rounded-lg border border-zinc-800/40 bg-zinc-900/30 text-[12px]">
+                          <div className="flex justify-between mb-1">
+                            <span className="text-zinc-600">Wallet</span>
+                            <span className="text-zinc-400 font-mono text-[10px]">
+                              {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+                            </span>
+                          </div>
+                          {wmonBalance !== null && (
+                            <div className="flex justify-between mb-1">
+                              <span className="text-zinc-600">WMON Balance</span>
+                              <span className="text-zinc-400">{parseFloat(wmonBalance).toFixed(4)} WMON</span>
+                            </div>
+                          )}
+                          {tierPrice !== null && (
+                            <div className="flex justify-between">
+                              <span className="text-zinc-600">Tier Price</span>
+                              <span className="text-zinc-400">{formatUnits(tierPrice, 18)} WMON</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {tierPrice !== null && wmonBalance !== null && parseFloat(wmonBalance) < parseFloat(formatUnits(tierPrice, 18)) && (
+                          <div className="text-amber-400 text-sm text-center p-3 rounded-lg bg-amber-500/5 border border-amber-500/10">
+                            You need {formatUnits(tierPrice, 18)} WMON. Current balance: {parseFloat(wmonBalance).toFixed(4)} WMON
+                          </div>
+                        )}
+
+                        {payError && (
+                          <div className="text-red-400 text-sm text-center p-3 rounded-lg bg-red-500/5 border border-red-500/10">
+                            {payError}
+                          </div>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={handlePayment}
+                          disabled={payStep === 'approving' || payStep === 'paying'}
+                          className="cta-primary w-full"
+                          style={{ opacity: payStep === 'approving' || payStep === 'paying' ? 0.6 : 1 }}
+                        >
+                          {payStep === 'approving'
+                            ? 'Approving WMON...'
+                            : payStep === 'paying'
+                            ? 'Processing payment...'
+                            : 'Pay with WMON'}
+                        </button>
+
+                        <p className="text-center text-[10px] text-zinc-800">
+                          Approve WMON + pay directly from your wallet on Monad.
+                        </p>
+                      </>
+                    ) : (
+                      <div className="text-zinc-600 text-sm text-center">Loading wallet...</div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </Reveal>
+          ) : (
+            <Reveal delay={100}>
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                setLoading(true);
+                setError('');
+                try {
+                  const res = await fetch('/api/turbo/apply', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(form),
+                  });
+                  const data = await res.json();
+                  if (!res.ok || !data.success) {
+                    setError(data.error || 'Something went wrong. Please try again.');
+                  } else {
+                    setSubmitted(true);
+                  }
+                } catch {
+                  setError('Network error. Please check your connection and try again.');
+                } finally {
+                  setLoading(false);
+                }
+              }} className="space-y-4">
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[11px] tracking-[0.12em] uppercase text-zinc-600 mb-2 syne font-semibold">Name</label>
+                    <input type="text" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Your name" />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] tracking-[0.12em] uppercase text-zinc-600 mb-2 syne font-semibold">Email</label>
+                    <input type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="you@email.com" />
+                  </div>
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[11px] tracking-[0.12em] uppercase text-zinc-600 mb-2 syne font-semibold">Twitter / X</label>
+                    <input type="text" value={form.twitter} onChange={(e) => setForm({ ...form, twitter: e.target.value })} placeholder="@handle" />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] tracking-[0.12em] uppercase text-zinc-600 mb-2 syne font-semibold">Bybit UID</label>
+                    <input type="text" required value={form.bybit} onChange={(e) => setForm({ ...form, bybit: e.target.value })} placeholder="Your Bybit UID" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] tracking-[0.12em] uppercase text-zinc-600 mb-2 syne font-semibold">Why TURBO?</label>
+                  <textarea required rows={3} value={form.why} onChange={(e) => setForm({ ...form, why: e.target.value })}
+                    placeholder="What are you building and why is TURBO the right fit..." style={{ resize: 'none' }} />
+                </div>
+
+                {/* Tier selection */}
+                <div>
+                  <label className="block text-[11px] tracking-[0.12em] uppercase text-zinc-600 mb-3 syne font-semibold">Select your tier</label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {([
+                      { value: 'explorer', label: 'Explorer', price: '$50', color: '#06b6d4' },
+                      { value: 'builder', label: 'Builder', price: '$200', color: '#8b5cf6' },
+                      { value: 'founder', label: 'Founder', price: '$500', color: '#f59e0b' },
+                    ] as const).map((t) => (
+                      <button
+                        key={t.value}
+                        type="button"
+                        onClick={() => setForm({ ...form, tier: t.value })}
+                        className="p-3 rounded-xl border text-center transition-all duration-200"
+                        style={{
+                          borderColor: form.tier === t.value ? t.color : 'rgba(63,63,70,0.3)',
+                          background: form.tier === t.value ? `${t.color}08` : 'transparent',
+                        }}
+                      >
+                        <div className="syne text-xs font-bold text-white">{t.label}</div>
+                        <div className="text-[10px] mt-0.5" style={{ color: form.tier === t.value ? t.color : '#71717a' }}>
+                          {t.price} <span className="text-zinc-700">MXN/mo</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {error && (
+                  <div className="text-red-400 text-sm text-center p-3 rounded-lg bg-red-500/5 border border-red-500/10">
+                    {error}
+                  </div>
+                )}
+
+                <button type="submit" disabled={loading} className="cta-primary w-full mt-2" style={{ opacity: loading ? 0.6 : 1 }}>
+                  {loading ? 'Submitting...' : 'Submit Application'}
+                </button>
+
+                <p className="text-center text-[11px] text-zinc-800">Rolling admissions. Cohort 1 starts soon.</p>
+              </form>
+            </Reveal>
+          )}
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="py-12 px-6 border-t border-zinc-900/50">
+        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <span className="syne text-sm font-bold gt">TURBO</span>
+            <span className="text-zinc-800 text-xs">by EmpowerTours</span>
+          </div>
+          <div className="flex items-center gap-4 text-[11px] text-zinc-800">
+            <span>Powered by Monad</span>
+            <span className="w-px h-2.5 bg-zinc-900" />
+            <span>&copy; 2026 EmpowerTours</span>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
