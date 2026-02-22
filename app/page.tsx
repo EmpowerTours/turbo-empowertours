@@ -112,6 +112,35 @@ const STEPS = [
   },
 ];
 
+const CONTRACTS = {
+  cohort: '0xEae06514a0d3daf610cC0778B27f387018521Ab5',
+  governance: '0x9e7A91D9F891373DD0846f443E4484EfA12c4899',
+};
+
+const GOV_FLOW = [
+  {
+    num: '01',
+    color: '#06b6d4',
+    title: 'Propose',
+    desc: 'A council member submits a Graduating Founder slate — members from any tier — with proposed funding amounts.',
+    icon: 'M12 4v16m-8-8h16',
+  },
+  {
+    num: '02',
+    color: '#8b5cf6',
+    title: 'Vote',
+    desc: 'Council members vote yes or no over a 7-day voting period. 60% quorum required.',
+    icon: 'M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z',
+  },
+  {
+    num: '03',
+    color: '#f59e0b',
+    title: 'Execute',
+    desc: 'If passed, anyone can execute. Funds distribute on-chain. New Graduating Founders join the council.',
+    icon: 'M13 10V3L4 14h7v7l9-11h-7z',
+  },
+];
+
 /* ── Scroll reveal hook ── */
 
 function Reveal({ children, className = '', delay = 0 }: { children: ReactNode; className?: string; delay?: number }) {
@@ -935,6 +964,169 @@ export default function TurboPage() {
               <p className="text-[10px] text-zinc-800 mt-3">
                 TurboCohortV6 &middot; 0xEae0...1Ab5 &middot; Verified on Monad
               </p>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      <div className="divider mx-6" />
+
+      {/* ════════ GOVERNANCE ════════ */}
+      <section id="governance" className="py-28 md:py-36 px-6 relative overflow-hidden">
+        <div className="max-w-5xl mx-auto relative z-10">
+          <Reveal>
+            <Label color="#06b6d4">On-Chain Governance</Label>
+            <h2 className="syne text-3xl md:text-5xl font-bold text-white leading-tight mb-4">
+              Community-owned <span className="gt">decisions.</span>
+            </h2>
+            <p className="text-zinc-500 text-[15px] mb-14 max-w-xl">
+              TURBO is governed by smart contracts on Monad. Graduating Founder selection progressively decentralizes through a growing council of past winners.
+            </p>
+          </Reveal>
+
+          {/* Architecture diagram */}
+          <Reveal delay={100}>
+            <div className="mb-12">
+              <div className="grid md:grid-cols-3 gap-4 items-stretch">
+                {/* Cohort 1 */}
+                <div className="p-5 rounded-2xl border border-zinc-800/60 bg-zinc-900/20">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-2 h-2 rounded-full" style={{ background: '#06b6d4' }} />
+                    <span className="syne text-[10px] tracking-[0.15em] uppercase text-zinc-600 font-semibold">Cohort 1</span>
+                  </div>
+                  <h3 className="syne text-lg font-bold text-white mb-2">Admin Selection</h3>
+                  <p className="text-[13px] text-zinc-500 leading-relaxed mb-4">
+                    Earvin selects ~5 Graduating Founders directly from any tier. Selected members are automatically added to the Founders Council.
+                  </p>
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-semibold border" style={{ background: '#06b6d410', borderColor: '#06b6d420', color: '#06b6d4' }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    Direct Selection
+                  </div>
+                </div>
+
+                {/* Arrow */}
+                <div className="hidden md:flex flex-col items-center justify-center gap-2">
+                  <div className="text-[9px] tracking-[0.15em] uppercase text-zinc-700 syne font-semibold">Council grows</div>
+                  <svg width="60" height="16" viewBox="0 0 60 16" fill="none">
+                    <path d="M0 8h50M46 3l8 5-8 5" stroke="#52525b" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <div className="text-[9px] tracking-[0.15em] uppercase text-zinc-700 syne font-semibold">Each cohort</div>
+                </div>
+
+                {/* Cohort 2+ */}
+                <div className="p-5 rounded-2xl border bg-zinc-900/20" style={{ borderColor: 'rgba(139, 92, 246, 0.15)' }}>
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-2 h-2 rounded-full" style={{ background: '#8b5cf6' }} />
+                    <span className="syne text-[10px] tracking-[0.15em] uppercase text-zinc-600 font-semibold">Cohort 2+</span>
+                  </div>
+                  <h3 className="syne text-lg font-bold text-white mb-2">Council Governance</h3>
+                  <p className="text-[13px] text-zinc-500 leading-relaxed mb-4">
+                    Past Graduating Founders propose and vote on new Graduating Founder slates. 60% quorum, 7-day voting period. Admin retains emergency veto.
+                  </p>
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-semibold border" style={{ background: '#8b5cf610', borderColor: '#8b5cf620', color: '#8b5cf6' }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+                    Council Votes
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Reveal>
+
+          {/* Governance flow steps */}
+          <Reveal delay={200}>
+            <div className="mb-12">
+              <h3 className="syne text-lg font-bold text-white mb-6">How Proposals Work</h3>
+              <div className="grid md:grid-cols-3 gap-5">
+                {GOV_FLOW.map((step) => (
+                  <div key={step.num} className="relative p-5 rounded-2xl border border-zinc-800/60 bg-zinc-900/20">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center border" style={{ background: `${step.color}12`, borderColor: `${step.color}25` }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={step.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d={step.icon} />
+                        </svg>
+                      </div>
+                      <div>
+                        <span className="syne text-[10px] tracking-[0.15em] uppercase text-zinc-600 font-semibold">Step {step.num}</span>
+                        <h4 className="syne text-sm font-bold text-white">{step.title}</h4>
+                      </div>
+                    </div>
+                    <p className="text-[13px] text-zinc-500 leading-relaxed">{step.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Reveal>
+
+          {/* Key governance parameters */}
+          <Reveal delay={300}>
+            <div className="grid sm:grid-cols-4 gap-4 mb-12">
+              {[
+                { value: '60%', label: 'Quorum', desc: 'Council must participate' },
+                { value: '7d', label: 'Voting Period', desc: 'Time to cast votes' },
+                { value: '10', label: 'Max Slate', desc: 'Founders per proposal' },
+                { value: '5%', label: 'Treasury Fee', desc: 'Ops & sustainability' },
+              ].map((param) => (
+                <div key={param.label} className="text-center p-4 rounded-xl border border-zinc-800/60 bg-zinc-900/20">
+                  <div className="syne text-2xl font-extrabold gt">{param.value}</div>
+                  <div className="syne text-[11px] font-bold text-zinc-400 mt-1">{param.label}</div>
+                  <div className="text-[10px] text-zinc-700 mt-0.5">{param.desc}</div>
+                </div>
+              ))}
+            </div>
+          </Reveal>
+
+          {/* Contract addresses */}
+          <Reveal delay={400}>
+            <div className="p-6 rounded-2xl border border-zinc-800/60 bg-zinc-900/20">
+              <h3 className="syne text-sm font-bold text-white mb-4">Verified Contracts on Monad</h3>
+              <div className="space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-lg bg-zinc-900/40">
+                  <div>
+                    <div className="syne text-[11px] font-semibold text-zinc-400">TurboCohortV6</div>
+                    <div className="text-[10px] text-zinc-600">Membership, payments, pool, soulbound NFTs</div>
+                  </div>
+                  <a
+                    href={`https://monadscan.com/address/${CONTRACTS.cohort}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-mono text-[11px] text-cyan-500/70 hover:text-cyan-400 transition-colors break-all"
+                  >
+                    {CONTRACTS.cohort}
+                  </a>
+                </div>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-lg bg-zinc-900/40">
+                  <div>
+                    <div className="syne text-[11px] font-semibold text-zinc-400">TurboGovernance</div>
+                    <div className="text-[10px] text-zinc-600">Council voting, proposals, admin passthrough</div>
+                  </div>
+                  <a
+                    href={`https://monadscan.com/address/${CONTRACTS.governance}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-mono text-[11px] text-purple-500/70 hover:text-purple-400 transition-colors break-all"
+                  >
+                    {CONTRACTS.governance}
+                  </a>
+                </div>
+              </div>
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <span className="inline-flex items-center gap-1.5 text-[10px] text-zinc-700">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-500/60"></span>
+                  Ownable2Step
+                </span>
+                <span className="inline-flex items-center gap-1.5 text-[10px] text-zinc-700">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-500/60"></span>
+                  ReentrancyGuard
+                </span>
+                <span className="inline-flex items-center gap-1.5 text-[10px] text-zinc-700">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-500/60"></span>
+                  SafeERC20
+                </span>
+                <span className="inline-flex items-center gap-1.5 text-[10px] text-zinc-700">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-500/60"></span>
+                  Soulbound ERC-721
+                </span>
+              </div>
             </div>
           </Reveal>
         </div>
