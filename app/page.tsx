@@ -896,6 +896,39 @@ export default function TurboPage() {
                       { num: 293, code: '// Update state BEFORE external calls (checks-effects-interactions)', note: 'State updated before any token transfer. Industry-standard security pattern.' },
                     ],
                   },
+                  {
+                    title: 'TurboGovernance — Council Proposals',
+                    color: '#06b6d4',
+                    lines: [
+                      { num: 40, code: 'uint256 public constant GOVERNANCE_COHORT_THRESHOLD = 2;', note: 'Council governance kicks in at Cohort 2. Cohort 1 uses admin direct selection.' },
+                      { num: 246, code: 'function createProposal(uint256 cohortId, address[] calldata founders, uint256[] calldata amounts)', note: 'Council members propose a founder slate with funding amounts. One active proposal per cohort.' },
+                      { num: 253, code: 'require(founders.length > 0 && founders.length <= MAX_SLATE_SIZE, "invalid slate size");', note: 'Max 10 founders per proposal. Prevents bloated slates.' },
+                      { num: 265, code: 'p.endTime = block.timestamp + VOTING_PERIOD;', note: '7-day voting window. Starts immediately when proposal is created.' },
+                      { num: 254, code: 'require(activeProposalForCohort[cohortId] == 0, "active proposal exists");', note: 'Only one active proposal per cohort — prevents vote splitting.' },
+                    ],
+                  },
+                  {
+                    title: 'TurboGovernance — Voting & Execution',
+                    color: '#8b5cf6',
+                    lines: [
+                      { num: 274, code: 'function vote(uint256 proposalId, bool support) external onlyCouncilMember {', note: 'Only council members can vote. Each member gets one vote per proposal.' },
+                      { num: 278, code: 'require(!hasVoted[proposalId][msg.sender], "already voted");', note: 'No double voting. One address, one vote.' },
+                      { num: 300, code: 'if (totalVotes >= quorum && p.yesVotes > p.noVotes) {', note: '60% of council must vote AND yes > no for the proposal to pass.' },
+                      { num: 312, code: 'function executeProposal(uint256 proposalId) external nonReentrant {', note: 'Anyone (admin or council) can execute a passed proposal. Funds distribute on-chain.' },
+                      { num: 324, code: '_addFoundersToCouncil(p.founders);', note: 'New graduating founders automatically join the council. It grows every cohort.' },
+                    ],
+                  },
+                  {
+                    title: 'TurboGovernance — Admin Veto & Safety',
+                    color: '#f59e0b',
+                    lines: [
+                      { num: 342, code: 'function vetoProposal(uint256 proposalId) external onlyOwner {', note: 'Emergency veto — admin can block any active or passed proposal.' },
+                      { num: 345, code: 'require(p.status == ProposalStatus.Active || p.status == ProposalStatus.Passed,', note: 'Can veto during voting or after passing, but not after execution.' },
+                      { num: 204, code: 'function selectFoundersDirect(uint256 cohortId, ...)', note: 'Cohort 1 only: admin selects founders directly. Auto-adds them to council.' },
+                      { num: 209, code: 'require(cohortId < GOVERNANCE_COHORT_THRESHOLD, "use governance for this cohort");', note: 'Hard-coded: Cohort 2+ MUST use council governance. No admin override.' },
+                      { num: 379, code: 'function renounceOwnership() public pure override { revert("renounce disabled"); }', note: 'Admin cannot abandon the contract. Prevents accidental lockout.' },
+                    ],
+                  },
                 ] as const).map((section, i) => (
                   <div key={i} className="rounded-xl border border-zinc-800/60 bg-zinc-900/20 overflow-hidden">
                     <button
@@ -947,24 +980,35 @@ export default function TurboPage() {
             </div>
           </Reveal>
 
-          {/* Contract link */}
+          {/* Contract links */}
           <Reveal delay={400}>
-            <div className="text-center">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <a
-                href="https://monadscan.com/address/0xEae06514a0d3daf610cC0778B27f387018521Ab5"
+                href={`https://monadscan.com/address/${CONTRACTS.cohort}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 syne text-[11px] font-bold tracking-[0.1em] uppercase py-3 px-6 rounded-lg bg-cyan-500/10 text-cyan-400 hover:brightness-110 transition-all"
               >
-                <span>View Contract on MonadScan</span>
+                <span>TurboCohortV6</span>
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                   <path d="M3 9L9 3M9 3H4.5M9 3V7.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </a>
-              <p className="text-[10px] text-zinc-800 mt-3">
-                TurboCohortV6 &middot; 0xEae0...1Ab5 &middot; Verified on Monad
-              </p>
+              <a
+                href={`https://monadscan.com/address/${CONTRACTS.governance}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 syne text-[11px] font-bold tracking-[0.1em] uppercase py-3 px-6 rounded-lg bg-purple-500/10 text-purple-400 hover:brightness-110 transition-all"
+              >
+                <span>TurboGovernance</span>
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <path d="M3 9L9 3M9 3H4.5M9 3V7.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </a>
             </div>
+            <p className="text-[10px] text-zinc-800 mt-3 text-center">
+              Both contracts verified on Monad &middot; Ownable2Step &middot; ReentrancyGuard
+            </p>
           </Reveal>
         </div>
       </section>
