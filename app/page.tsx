@@ -10,6 +10,8 @@ import {
   WMON_ABI,
   TURBO_COHORT_ABI,
   TIERS,
+  PASSPORT_ADDRESS,
+  PASSPORT_ABI,
 } from '@/lib/contracts';
 
 const publicClient = createPublicClient({
@@ -248,15 +250,16 @@ export default function TurboPage() {
   const [wmonBalance, setWmonBalance] = useState<string | null>(null);
   const [tierPrice, setTierPrice] = useState<bigint | null>(null);
   const [copiedWallet, setCopiedWallet] = useState(false);
+  const [hasPassport, setHasPassport] = useState<boolean | null>(null);
 
   const connectedWallet = wallets[0];
   const walletAddress = connectedWallet?.address as Address | undefined;
 
-  // Fetch WMON balance and tier price when wallet connects or tier changes
+  // Fetch WMON balance, tier price, and passport check when wallet connects
   const fetchBalanceAndPrice = useCallback(async () => {
     if (!walletAddress) return;
     try {
-      const [balance, price] = await Promise.all([
+      const [balance, price, passportBal] = await Promise.all([
         publicClient.readContract({
           address: WMON_ADDRESS,
           abi: WMON_ABI,
@@ -269,9 +272,16 @@ export default function TurboPage() {
           functionName: 'tierPrice',
           args: [TIERS[form.tier]],
         }),
+        publicClient.readContract({
+          address: PASSPORT_ADDRESS,
+          abi: PASSPORT_ABI,
+          functionName: 'balanceOf',
+          args: [walletAddress],
+        }),
       ]);
       setWmonBalance(formatUnits(balance, 18));
       setTierPrice(price);
+      setHasPassport(Number(passportBal) > 0);
     } catch {
       // silently fail
     }
@@ -363,9 +373,14 @@ export default function TurboPage() {
       {/* Top nav */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-[#060608]/80 backdrop-blur-md border-b border-zinc-900/50">
         <span className="syne text-sm font-bold gt">TURBO</span>
-        <a href="/status" className="syne text-[11px] font-semibold tracking-[0.1em] uppercase text-zinc-500 hover:text-cyan-400 transition-colors">
-          Already applied? Pay here
-        </a>
+        <div className="flex items-center gap-4">
+          <a href="/governance" className="syne text-[11px] font-semibold tracking-[0.1em] uppercase text-zinc-500 hover:text-cyan-400 transition-colors">
+            Governance
+          </a>
+          <a href="/status" className="syne text-[11px] font-semibold tracking-[0.1em] uppercase text-zinc-500 hover:text-cyan-400 transition-colors">
+            Pay here
+          </a>
+        </div>
       </nav>
 
       {/* HERO */}
@@ -1385,6 +1400,14 @@ export default function TurboPage() {
                           </div>
                         )}
 
+                        {hasPassport === false && (
+                          <div className="text-amber-400 text-sm text-center p-4 rounded-lg bg-amber-500/5 border border-amber-500/10">
+                            <div className="syne font-bold text-[12px] mb-1">EmpowerTours Passport Required</div>
+                            <p className="text-[11px] text-zinc-500 mb-2">You need an EmpowerTours Passport NFT to participate in TURBO. LATAM preferred, all countries welcome.</p>
+                            <a href={`https://monadscan.com/address/0x93126e59004692b01961be505aa04f55d5bd1851`} target="_blank" rel="noopener noreferrer" className="text-[11px] text-amber-400 underline underline-offset-2">Mint Passport</a>
+                          </div>
+                        )}
+
                         {payError && (
                           <div className="text-red-400 text-sm text-center p-3 rounded-lg bg-red-500/5 border border-red-500/10">
                             {payError}
@@ -1394,14 +1417,16 @@ export default function TurboPage() {
                         <button
                           type="button"
                           onClick={handlePayment}
-                          disabled={payStep === 'approving' || payStep === 'paying'}
+                          disabled={payStep === 'approving' || payStep === 'paying' || hasPassport === false}
                           className="cta-primary w-full"
-                          style={{ opacity: payStep === 'approving' || payStep === 'paying' ? 0.6 : 1 }}
+                          style={{ opacity: payStep === 'approving' || payStep === 'paying' || hasPassport === false ? 0.6 : 1 }}
                         >
                           {payStep === 'approving'
                             ? 'Approving WMON...'
                             : payStep === 'paying'
                             ? 'Processing payment...'
+                            : hasPassport === false
+                            ? 'Passport Required'
                             : 'Pay with WMON'}
                         </button>
 

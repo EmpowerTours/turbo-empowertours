@@ -11,6 +11,8 @@ import {
   TURBO_COHORT_ABI,
   TIERS,
   TIER_NAMES,
+  PASSPORT_ADDRESS,
+  PASSPORT_ABI,
 } from '@/lib/contracts';
 
 const publicClient = createPublicClient({
@@ -110,6 +112,7 @@ export default function StatusPage() {
   const [payResult, setPayResult] = useState<{ txHash: string; amount: string } | null>(null);
   const [wmonBalance, setWmonBalance] = useState<string | null>(null);
   const [tierPrice, setTierPrice] = useState<bigint | null>(null);
+  const [hasPassport, setHasPassport] = useState<boolean | null>(null);
 
   const connectedWallet = wallets[0];
   const walletAddress = connectedWallet?.address as Address | undefined;
@@ -134,7 +137,7 @@ export default function StatusPage() {
     if (!walletAddress || application === null) return;
     setBalanceLoading(true);
     try {
-      const [balance, price] = await Promise.all([
+      const [balance, price, passportBal] = await Promise.all([
         publicClient.readContract({
           address: WMON_ADDRESS,
           abi: WMON_ABI,
@@ -147,9 +150,16 @@ export default function StatusPage() {
           functionName: 'tierPrice',
           args: [tierNum],
         }),
+        publicClient.readContract({
+          address: PASSPORT_ADDRESS,
+          abi: PASSPORT_ABI,
+          functionName: 'balanceOf',
+          args: [walletAddress],
+        }),
       ]);
       setWmonBalance(formatUnits(balance, 18));
       setTierPrice(price);
+      setHasPassport(Number(passportBal) > 0);
     } catch (err) {
       console.error('Failed to fetch balance/price:', err);
       setPayError('Failed to load wallet data. Please try again.');
@@ -470,6 +480,14 @@ export default function StatusPage() {
                             </div>
                           )}
 
+                          {hasPassport === false && (
+                            <div className="text-amber-400 text-sm text-center p-4 rounded-lg bg-amber-500/5 border border-amber-500/10">
+                              <div className="syne font-bold text-[12px] mb-1">EmpowerTours Passport Required</div>
+                              <p className="text-[11px] text-zinc-500 mb-2">You need an EmpowerTours Passport NFT to participate in TURBO. LATAM preferred, all countries welcome.</p>
+                              <a href="https://monadscan.com/address/0x93126e59004692b01961be505aa04f55d5bd1851" target="_blank" rel="noopener noreferrer" className="text-[11px] text-amber-400 underline underline-offset-2">Mint Passport</a>
+                            </div>
+                          )}
+
                           {payError && (
                             <div className="text-red-400 text-sm text-center p-3 rounded-lg bg-red-500/5 border border-red-500/10">
                               {payError}
@@ -479,12 +497,14 @@ export default function StatusPage() {
                           <button
                             type="button"
                             onClick={handlePayment}
-                            disabled={payStep === 'approving' || payStep === 'paying' || balanceLoading}
+                            disabled={payStep === 'approving' || payStep === 'paying' || balanceLoading || hasPassport === false}
                             className="cta-primary w-full"
-                            style={{ opacity: payStep === 'approving' || payStep === 'paying' || balanceLoading ? 0.6 : 1 }}
+                            style={{ opacity: payStep === 'approving' || payStep === 'paying' || balanceLoading || hasPassport === false ? 0.6 : 1 }}
                           >
                             {balanceLoading
                               ? 'Loading wallet data...'
+                              : hasPassport === false
+                              ? 'Passport Required'
                               : payStep === 'approving'
                               ? 'Approving WMON...'
                               : payStep === 'paying'
