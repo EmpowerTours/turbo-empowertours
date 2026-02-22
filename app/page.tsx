@@ -210,6 +210,7 @@ export default function TurboPage() {
   const [payResult, setPayResult] = useState<{ txHash: string; amount: string } | null>(null);
   const [wmonBalance, setWmonBalance] = useState<string | null>(null);
   const [tierPrice, setTierPrice] = useState<bigint | null>(null);
+  const [copiedWallet, setCopiedWallet] = useState(false);
 
   const connectedWallet = wallets[0];
   const walletAddress = connectedWallet?.address as Address | undefined;
@@ -1085,11 +1086,20 @@ export default function TurboPage() {
                     ) : walletAddress ? (
                       <>
                         <div className="p-3 rounded-lg border border-zinc-800/40 bg-zinc-900/30 text-[12px]">
-                          <div className="flex justify-between mb-1">
+                          <div className="flex justify-between items-center mb-1">
                             <span className="text-zinc-600">Wallet</span>
-                            <span className="text-zinc-400 font-mono text-[10px]">
-                              {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
-                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(walletAddress);
+                                setCopiedWallet(true);
+                                setTimeout(() => setCopiedWallet(false), 2000);
+                              }}
+                              className="text-zinc-400 font-mono text-[10px] hover:text-cyan-400 transition-colors cursor-pointer bg-transparent border-none p-0"
+                              title={walletAddress}
+                            >
+                              {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)} {copiedWallet ? '\u2713' : '\u{1F4CB}'}
+                            </button>
                           </div>
                           {wmonBalance !== null && (
                             <div className="flex justify-between mb-1">
