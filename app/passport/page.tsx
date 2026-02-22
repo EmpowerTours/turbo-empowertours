@@ -66,46 +66,55 @@ export default function PassportPage() {
     return () => { document.body.style.backgroundColor = ''; };
   }, []);
 
-  // Check if user already has a passport
+  // Collect all wallet addresses from Privy (connected, FC, linked accounts)
+  const allAddresses = (() => {
+    const seen = new Set<string>();
+    const addrs: Address[] = [];
+    const add = (a: string | undefined) => {
+      if (!a) return;
+      const low = a.toLowerCase();
+      if (seen.has(low)) return;
+      seen.add(low);
+      addrs.push(a as Address);
+    };
+    add(walletAddress);
+    add(farcasterAddress);
+    if (user?.linkedAccounts) {
+      for (const acct of user.linkedAccounts) {
+        if ('address' in acct && typeof (acct as { address?: string }).address === 'string') {
+          add((acct as { address: string }).address);
+        }
+      }
+    }
+    return addrs;
+  })();
+
+  // Check if user already has a passport on ANY linked address
   const checkPassport = useCallback(async () => {
-    if (!walletAddress) {
+    if (allAddresses.length === 0) {
       setHasPassport(null);
       return;
     }
 
     try {
-      const balance = await publicClient.readContract({
-        address: PASSPORT_ADDRESS,
-        abi: PASSPORT_ABI,
-        functionName: 'balanceOf',
-        args: [walletAddress],
-      });
-
-      if (Number(balance) > 0) {
-        setHasPassport(true);
-        return;
-      }
-
-      // Also check farcaster address if it exists and differs
-      if (farcasterAddress && farcasterAddress.toLowerCase() !== walletAddress.toLowerCase()) {
-        const fcBalance = await publicClient.readContract({
+      for (const addr of allAddresses) {
+        const balance = await publicClient.readContract({
           address: PASSPORT_ADDRESS,
           abi: PASSPORT_ABI,
           functionName: 'balanceOf',
-          args: [farcasterAddress],
+          args: [addr],
         });
-
-        if (Number(fcBalance) > 0) {
+        if (Number(balance) > 0) {
           setHasPassport(true);
           return;
         }
       }
-
       setHasPassport(false);
     } catch {
       setHasPassport(false);
     }
-  }, [walletAddress, farcasterAddress]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allAddresses.join(',')]);
 
   useEffect(() => {
     checkPassport();

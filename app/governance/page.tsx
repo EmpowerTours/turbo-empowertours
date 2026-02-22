@@ -244,29 +244,35 @@ export default function GovernancePage() {
         const isCouncil = council.some(m => m.toLowerCase() === walletAddress.toLowerCase());
         setRole(isOwner ? 'admin' : isCouncil ? 'council' : 'observer');
 
-        // Check EmpowerTours Passport NFT
+        // Check EmpowerTours Passport NFT on all linked addresses
         try {
-          const passportBalance = await publicClient.readContract({
-            address: PASSPORT_ADDRESS,
-            abi: PASSPORT_ABI,
-            functionName: 'balanceOf',
-            args: [walletAddress],
-          });
-          setHasPassport(Number(passportBalance) > 0);
-          if (Number(passportBalance) === 0 && user?.farcaster?.ownerAddress) {
-            const fcAddr = user.farcaster.ownerAddress as Address;
-            if (fcAddr.toLowerCase() !== walletAddress.toLowerCase()) {
-              try {
-                const fcBal = await publicClient.readContract({
-                  address: PASSPORT_ADDRESS,
-                  abi: PASSPORT_ABI,
-                  functionName: 'balanceOf',
-                  args: [fcAddr],
-                });
-                if (Number(fcBal) > 0) setHasPassport(true);
-              } catch {}
+          const seen = new Set<string>();
+          const addrs: Address[] = [];
+          const addAddr = (a: string | undefined) => {
+            if (!a || seen.has(a.toLowerCase())) return;
+            seen.add(a.toLowerCase());
+            addrs.push(a as Address);
+          };
+          addAddr(walletAddress);
+          addAddr(user?.farcaster?.ownerAddress);
+          if (user?.linkedAccounts) {
+            for (const acct of user.linkedAccounts) {
+              if ('address' in acct && typeof (acct as { address?: string }).address === 'string') {
+                addAddr((acct as { address: string }).address);
+              }
             }
           }
+          let found = false;
+          for (const addr of addrs) {
+            const bal = await publicClient.readContract({
+              address: PASSPORT_ADDRESS,
+              abi: PASSPORT_ABI,
+              functionName: 'balanceOf',
+              args: [addr],
+            });
+            if (Number(bal) > 0) { found = true; break; }
+          }
+          setHasPassport(found);
         } catch {
           setHasPassport(false);
         }

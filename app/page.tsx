@@ -281,20 +281,37 @@ export default function TurboPage() {
       ]);
       setWmonBalance(formatUnits(balance, 18));
       setTierPrice(price);
-      setHasPassport(Number(passportBal) > 0);
-      if (Number(passportBal) === 0 && user?.farcaster?.ownerAddress) {
-        const fcAddr = user.farcaster.ownerAddress as Address;
-        if (fcAddr.toLowerCase() !== walletAddress.toLowerCase()) {
+      if (Number(passportBal) > 0) {
+        setHasPassport(true);
+      } else {
+        const seen = new Set<string>([walletAddress.toLowerCase()]);
+        const extraAddrs: Address[] = [];
+        const addAddr = (a: string | undefined) => {
+          if (!a || seen.has(a.toLowerCase())) return;
+          seen.add(a.toLowerCase());
+          extraAddrs.push(a as Address);
+        };
+        addAddr(user?.farcaster?.ownerAddress);
+        if (user?.linkedAccounts) {
+          for (const acct of user.linkedAccounts) {
+            if ('address' in acct && typeof (acct as { address?: string }).address === 'string') {
+              addAddr((acct as { address: string }).address);
+            }
+          }
+        }
+        let found = false;
+        for (const addr of extraAddrs) {
           try {
-            const fcBal = await publicClient.readContract({
+            const bal = await publicClient.readContract({
               address: PASSPORT_ADDRESS,
               abi: PASSPORT_ABI,
               functionName: 'balanceOf',
-              args: [fcAddr],
+              args: [addr],
             });
-            if (Number(fcBal) > 0) setHasPassport(true);
+            if (Number(bal) > 0) { found = true; break; }
           } catch {}
         }
+        setHasPassport(found);
       }
     } catch {
       // silently fail
