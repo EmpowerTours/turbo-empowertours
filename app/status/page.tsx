@@ -438,6 +438,90 @@ export default function StatusPage() {
                     </a>
                   </div>
                 </div>
+
+                {/* Upgrade / Renew */}
+                {memberTier < 3 && (
+                  <div className="p-6 rounded-2xl border border-zinc-800/60 bg-zinc-900/20">
+                    <div className="syne text-sm font-bold text-white mb-1">Upgrade Tier</div>
+                    <p className="text-zinc-600 text-[12px] mb-4">Pay at a higher tier to upgrade your membership.</p>
+                    <div className="grid grid-cols-3 gap-2 mb-4">
+                      {([
+                        { value: 'explorer', num: 1, label: 'Explorer', price: '$50', color: '#06b6d4' },
+                        { value: 'builder', num: 2, label: 'Builder', price: '$200', color: '#8b5cf6' },
+                        { value: 'founder', num: 3, label: 'Founder', price: '$500', color: '#f59e0b' },
+                      ] as const).map((t) => (
+                        <button
+                          key={t.value}
+                          type="button"
+                          disabled={t.num <= memberTier}
+                          onClick={() => setSelectedTier(t.value)}
+                          className="p-2.5 rounded-xl border text-center transition-all duration-200"
+                          style={{
+                            borderColor: t.num <= memberTier
+                              ? 'rgba(63,63,70,0.15)'
+                              : activeTier === t.value ? t.color : 'rgba(63,63,70,0.3)',
+                            background: t.num <= memberTier
+                              ? 'transparent'
+                              : activeTier === t.value ? `${t.color}08` : 'transparent',
+                            opacity: t.num <= memberTier ? 0.4 : 1,
+                          }}
+                        >
+                          <div className="syne text-xs font-bold text-white">{t.label}</div>
+                          <div className="text-[10px] mt-0.5" style={{ color: t.num <= memberTier ? '#52525b' : activeTier === t.value ? t.color : '#71717a' }}>
+                            {t.num <= memberTier ? 'Current' : t.price + ' MXN/mo'}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+
+                    {tierPrice !== null && (
+                      <div className="text-[12px] text-zinc-500 mb-3 flex justify-between">
+                        <span>Upgrade Price</span>
+                        <span className="text-zinc-400">{formatUnits(tierPrice, 18)} WMON</span>
+                      </div>
+                    )}
+
+                    {payError && (
+                      <div className="text-red-400 text-sm text-center p-3 rounded-lg bg-red-500/5 border border-red-500/10 mb-3">
+                        {payError}
+                      </div>
+                    )}
+
+                    {payStep === 'success' && payResult ? (
+                      <div className="text-center p-4 rounded-xl border border-green-500/15 bg-green-500/[0.03]">
+                        <div className="syne text-sm font-bold text-green-400 mb-1">Upgrade Confirmed</div>
+                        <p className="text-zinc-500 text-[11px] mb-2">{payResult.amount} WMON paid.</p>
+                        <a href={`https://monadscan.com/tx/${payResult.txHash}`} target="_blank" rel="noopener noreferrer"
+                          className="text-green-400 text-[11px] underline underline-offset-2">View on MonadScan</a>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handlePayment}
+                        disabled={payStep === 'approving' || payStep === 'paying' || balanceLoading || TIERS[activeTier] <= memberTier}
+                        className="cta-primary w-full"
+                        style={{ opacity: payStep === 'approving' || payStep === 'paying' || balanceLoading || TIERS[activeTier] <= memberTier ? 0.5 : 1 }}
+                      >
+                        {balanceLoading
+                          ? 'Loading...'
+                          : payStep === 'approving'
+                          ? 'Approving WMON...'
+                          : payStep === 'paying'
+                          ? 'Processing...'
+                          : TIERS[activeTier] <= memberTier
+                          ? 'Select a higher tier'
+                          : `Upgrade to ${TIER_NAMES[TIERS[activeTier]] || activeTier}`}
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {memberTier >= 3 && (
+                  <div className="p-4 rounded-2xl border border-amber-500/15 bg-amber-500/[0.03] text-center">
+                    <div className="syne text-sm font-bold text-amber-400">Max Tier</div>
+                    <p className="text-zinc-500 text-[11px] mt-1">You&apos;re at the highest tier (Founder).</p>
+                  </div>
+                )}
               </div>
             </Reveal>
           )}
