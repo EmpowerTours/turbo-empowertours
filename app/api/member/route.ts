@@ -25,21 +25,23 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const [memberData, cohortId] = await Promise.all([
-      publicClient.readContract({
-        address: TURBO_COHORT_ADDRESS,
-        abi: TURBO_COHORT_ABI,
-        functionName: 'getMember',
-        args: [address],
-      }),
-      publicClient.readContract({
-        address: TURBO_COHORT_ADDRESS,
-        abi: TURBO_COHORT_ABI,
-        functionName: 'currentCohortId',
-      }),
-    ]);
+    const cohortId = await publicClient.readContract({
+      address: TURBO_COHORT_ADDRESS,
+      abi: TURBO_COHORT_ABI,
+      functionName: 'currentCohortId',
+    });
 
-    const [tier, monthsPaid, lastPayment, active] = memberData;
+    const memberData = await publicClient.readContract({
+      address: TURBO_COHORT_ADDRESS,
+      abi: TURBO_COHORT_ABI,
+      functionName: 'getMember',
+      args: [cohortId, address as `0x${string}`],
+    });
+
+    // getMember returns: name, email, telegram, tier, monthsPaid, lastPayment, tokenId, paymentTimestamps, banned
+    const tier = memberData[3];
+    const monthsPaid = memberData[4];
+    const lastPayment = memberData[5];
 
     // Fetch tier prices
     const tierPrices = await Promise.all(
@@ -61,7 +63,7 @@ export async function GET(req: NextRequest) {
         tierName: TIER_NAMES[Number(tier)] || 'None',
         monthsPaid: Number(monthsPaid),
         lastPayment: Number(lastPayment),
-        active,
+        active: Number(monthsPaid) > 0,
       },
       cohortId: Number(cohortId),
       tierPrices: {

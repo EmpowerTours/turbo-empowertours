@@ -124,6 +124,8 @@ export default function StatusPage() {
 
   const [copiedWallet, setCopiedWallet] = useState(false);
   const [balanceLoading, setBalanceLoading] = useState(false);
+  const [nftImageUri, setNftImageUri] = useState<string | null>(null);
+  const [nftName, setNftName] = useState<string | null>(null);
 
   // Sync selectedTier when application loads
   useEffect(() => {
@@ -219,6 +221,43 @@ export default function StatusPage() {
     fetchBalanceAndPrice();
   }, [fetchBalanceAndPrice]);
 
+  // Fetch NFT card image from on-chain tokenURI
+  const fetchNftCard = useCallback(async () => {
+    if (!walletAddress) return;
+    try {
+      const cohortId = await publicClient.readContract({
+        address: TURBO_COHORT_ADDRESS,
+        abi: TURBO_COHORT_ABI,
+        functionName: 'currentCohortId',
+      });
+      const member = await publicClient.readContract({
+        address: TURBO_COHORT_ADDRESS,
+        abi: TURBO_COHORT_ABI,
+        functionName: 'getMember',
+        args: [cohortId, walletAddress],
+      });
+      const tokenId = member[6]; // tokenId field
+      if (Number(tokenId) === 0) return;
+      const uri = await publicClient.readContract({
+        address: TURBO_COHORT_ADDRESS,
+        abi: TURBO_COHORT_ABI,
+        functionName: 'tokenURI',
+        args: [tokenId],
+      });
+      // uri is data:application/json;base64,...
+      const jsonStr = atob((uri as string).split(',')[1]);
+      const metadata = JSON.parse(jsonStr);
+      if (metadata.image) setNftImageUri(metadata.image);
+      if (metadata.name) setNftName(metadata.name);
+    } catch (err) {
+      console.error('Failed to fetch NFT card:', err);
+    }
+  }, [walletAddress]);
+
+  useEffect(() => {
+    if (walletAddress && application) fetchNftCard();
+  }, [walletAddress, application, fetchNftCard]);
+
   useEffect(() => {
     document.body.style.backgroundColor = '#060608';
     return () => { document.body.style.backgroundColor = ''; };
@@ -312,6 +351,8 @@ export default function StatusPage() {
 
       setPayResult({ txHash: payTx as string, amount: formatUnits(price, 18) });
       setPayStep('success');
+      // Fetch the newly minted NFT card
+      setTimeout(() => fetchNftCard(), 2000);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Payment failed';
       setPayError(message.includes('user rejected') ? 'Transaction was rejected.' : message);
@@ -461,6 +502,17 @@ export default function StatusPage() {
                     <div className="text-center p-6 rounded-xl border border-green-500/15 bg-green-500/[0.03]">
                       <div className="syne text-lg font-bold text-green-400 mb-1">Payment Confirmed</div>
                       <p className="text-zinc-500 text-xs mb-3">{payResult.amount} WMON paid. Your membership NFT has been minted.</p>
+                      {nftImageUri && (
+                        <div className="my-4">
+                          <img
+                            src={nftImageUri}
+                            alt={nftName || 'TURBO Membership NFT'}
+                            className="mx-auto rounded-xl border border-zinc-700/50 shadow-lg"
+                            style={{ maxWidth: 280 }}
+                          />
+                          {nftName && <p className="text-zinc-400 text-[11px] mt-2 syne font-semibold">{nftName}</p>}
+                        </div>
+                      )}
                       <a
                         href={`https://monadscan.com/tx/${payResult.txHash}`}
                         target="_blank"
