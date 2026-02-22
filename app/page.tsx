@@ -1277,9 +1277,10 @@ export default function TurboPage() {
                       </button>
                     ) : walletAddress ? (
                       <>
-                        <div className="p-3 rounded-lg border border-zinc-800/40 bg-zinc-900/30 text-[12px]">
-                          <div className="flex justify-between items-center mb-1">
-                            <span className="text-zinc-600">Wallet</span>
+                        <div className="p-4 rounded-lg border border-zinc-800/40 bg-zinc-900/30">
+                          {/* Full wallet address with prominent copy */}
+                          <div className="mb-3">
+                            <div className="text-zinc-600 text-[11px] mb-1.5">Your Privy Wallet</div>
                             <button
                               type="button"
                               onClick={() => {
@@ -1287,24 +1288,32 @@ export default function TurboPage() {
                                 setCopiedWallet(true);
                                 setTimeout(() => setCopiedWallet(false), 2000);
                               }}
-                              className="text-zinc-400 font-mono text-[10px] hover:text-cyan-400 transition-colors cursor-pointer bg-transparent border-none p-0"
-                              title={walletAddress}
+                              className="w-full flex items-center justify-between gap-2 p-2.5 rounded-lg border border-zinc-700/50 bg-zinc-800/50 hover:border-cyan-500/30 hover:bg-zinc-800/80 transition-all cursor-pointer"
+                              title="Click to copy full address"
                             >
-                              {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)} {copiedWallet ? '\u2713' : '\u{1F4CB}'}
+                              <span className="font-mono text-[11px] text-cyan-400 break-all text-left leading-relaxed">
+                                {walletAddress}
+                              </span>
+                              <span className="flex-shrink-0 text-[10px] px-2 py-1 rounded border border-zinc-700/50 bg-zinc-900/50 text-zinc-400 syne font-semibold">
+                                {copiedWallet ? 'Copied!' : 'Copy'}
+                              </span>
                             </button>
+                            <div className="text-[10px] text-zinc-700 mt-1">Send WMON to this address on Monad to fund your wallet</div>
                           </div>
-                          {wmonBalance !== null && (
-                            <div className="flex justify-between mb-1">
-                              <span className="text-zinc-600">WMON Balance</span>
-                              <span className="text-zinc-400">{parseFloat(wmonBalance).toFixed(4)} WMON</span>
-                            </div>
-                          )}
-                          {tierPrice !== null && (
-                            <div className="flex justify-between">
-                              <span className="text-zinc-600">Tier Price</span>
-                              <span className="text-zinc-400">{formatUnits(tierPrice, 18)} WMON</span>
-                            </div>
-                          )}
+                          <div className="space-y-1 text-[12px]">
+                            {wmonBalance !== null && (
+                              <div className="flex justify-between">
+                                <span className="text-zinc-600">WMON Balance</span>
+                                <span className="text-zinc-400">{parseFloat(wmonBalance).toFixed(4)} WMON</span>
+                              </div>
+                            )}
+                            {tierPrice !== null && (
+                              <div className="flex justify-between">
+                                <span className="text-zinc-600">Tier Price</span>
+                                <span className="text-zinc-400">{formatUnits(tierPrice, 18)} WMON</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
 
                         {tierPrice !== null && wmonBalance !== null && parseFloat(wmonBalance) < parseFloat(formatUnits(tierPrice, 18)) && (
