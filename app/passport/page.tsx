@@ -89,14 +89,18 @@ export default function PassportPage() {
     return addrs;
   })();
 
-  // Check if user already has a passport on ANY linked address
+  // Top country codes to check by FID (LATAM + common)
+  const FID_CHECK_COUNTRIES = ['MX','BR','AR','CO','CL','PE','EC','US','GB','ES','FR','DE','IN','NG','KE','JP','KR','PH','VE','CR'];
+
+  // Check if user already has a passport on ANY linked address or by FID
   const checkPassport = useCallback(async () => {
-    if (allAddresses.length === 0) {
+    if (allAddresses.length === 0 && !user?.farcaster?.fid) {
       setHasPassport(null);
       return;
     }
 
     try {
+      // 1. Check all linked wallet addresses
       for (const addr of allAddresses) {
         const balance = await publicClient.readContract({
           address: PASSPORT_ADDRESS,
@@ -109,12 +113,32 @@ export default function PassportPage() {
           return;
         }
       }
+
+      // 2. Check by Farcaster FID (cross-app wallet detection)
+      const fid = user?.farcaster?.fid;
+      if (fid) {
+        for (const code of FID_CHECK_COUNTRIES) {
+          try {
+            const tokenId = await publicClient.readContract({
+              address: PASSPORT_ADDRESS,
+              abi: PASSPORT_ABI,
+              functionName: 'getPassportByFid',
+              args: [BigInt(fid), code],
+            });
+            if (Number(tokenId) > 0) {
+              setHasPassport(true);
+              return;
+            }
+          } catch { /* skip */ }
+        }
+      }
+
       setHasPassport(false);
     } catch {
       setHasPassport(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allAddresses.join(',')]);
+  }, [allAddresses.join(','), user?.farcaster?.fid]);
 
   useEffect(() => {
     checkPassport();

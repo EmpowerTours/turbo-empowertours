@@ -190,6 +190,21 @@ export default function StatusPage() {
             if (Number(bal) > 0) { found = true; break; }
           } catch {}
         }
+        // Also check by Farcaster FID (cross-app wallet detection)
+        if (!found && user?.farcaster?.fid) {
+          const fidCheckCodes = ['MX','BR','AR','CO','CL','PE','EC','US','GB','ES','FR','DE','IN','NG','KE','JP','KR','PH','VE','CR'];
+          for (const code of fidCheckCodes) {
+            try {
+              const tid = await publicClient.readContract({
+                address: PASSPORT_ADDRESS,
+                abi: PASSPORT_ABI,
+                functionName: 'getPassportByFid',
+                args: [BigInt(user.farcaster.fid), code],
+              });
+              if (Number(tid) > 0) { found = true; break; }
+            } catch {}
+          }
+        }
         setHasPassport(found);
       }
     } catch (err) {

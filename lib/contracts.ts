@@ -98,6 +98,8 @@ export const PROPOSAL_STATUS_COLORS: Record<number, string> = {
 export const PASSPORT_ADDRESS = '0x93126e59004692b01961be505aa04f55d5bd1851' as const;
 export const PASSPORT_ABI = [
   { name: 'balanceOf', type: 'function', stateMutability: 'view', inputs: [{ name: 'owner', type: 'address' }], outputs: [{ name: '', type: 'uint256' }] },
+  { name: 'getPassportByFid', type: 'function', stateMutability: 'view', inputs: [{ name: 'fid', type: 'uint256' }, { name: 'countryCode', type: 'string' }], outputs: [{ name: '', type: 'uint256' }] },
+  { name: 'getTotalSupply', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint256' }] },
 ] as const;
 
 // Tier enum matching the contract: None=0, Explorer=1, Builder=2, Founder=3
