@@ -216,7 +216,7 @@ export async function POST(request: NextRequest) {
       functionName: 'mintFor',
       args: [
         userAddress as `0x${string}`,
-        BigInt(0),
+        BigInt(1),
         code,
         name,
         region,
