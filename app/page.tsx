@@ -672,6 +672,188 @@ export default function TurboPage() {
 
       <div className="divider mx-6" />
 
+      {/* SMART CONTRACT */}
+      <section id="contract" className="py-28 md:py-36 px-6 relative overflow-hidden">
+        <div className="orb" style={{ width: 500, height: 400, background: '#06b6d4', opacity: 0.03, top: '10%', left: '5%' }} />
+
+        <div className="max-w-4xl mx-auto relative z-10">
+          <Reveal>
+            <Label color="#06b6d4">On-Chain Transparency</Label>
+            <h2 className="syne text-3xl md:text-5xl font-bold text-white leading-tight mb-4">
+              Every peso on the <span className="gt">blockchain.</span>
+            </h2>
+            <p className="text-zinc-500 text-[15px] mb-14 max-w-xl">
+              TURBO runs on a verified smart contract on Monad. All payments, pool balances, and founder distributions are publicly auditable. No trust required — just code.
+            </p>
+          </Reveal>
+
+          {/* Contract flow */}
+          <Reveal delay={100}>
+            <div className="grid md:grid-cols-3 gap-4 mb-8">
+              {[
+                {
+                  step: '01',
+                  title: 'Member Pays',
+                  color: '#06b6d4',
+                  desc: 'Monthly WMON payment via payMonthly(). Soulbound NFT membership card minted on first payment.',
+                },
+                {
+                  step: '02',
+                  title: 'Funds Split',
+                  color: '#8b5cf6',
+                  desc: '95% goes to the Community Pool held in the contract. 5% goes to the EmpowerTours treasury.',
+                },
+                {
+                  step: '03',
+                  title: 'Founders Funded',
+                  color: '#f59e0b',
+                  desc: 'After 12 months, graduating founders are selected and receive WMON directly from the pool.',
+                },
+              ].map((item, i) => (
+                <Reveal key={item.step} delay={i * 120}>
+                  <div className="p-5 rounded-xl border border-zinc-800/60 bg-zinc-900/20 h-full">
+                    <span className="syne text-3xl font-extrabold" style={{ color: item.color, opacity: 0.15 }}>
+                      {item.step}
+                    </span>
+                    <h3 className="syne text-sm font-bold text-white mt-2 mb-2">{item.title}</h3>
+                    <p className="text-[12px] text-zinc-500 leading-relaxed">{item.desc}</p>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+          </Reveal>
+
+          {/* Math breakdown */}
+          <Reveal delay={200}>
+            <div className="p-6 md:p-8 rounded-2xl border border-zinc-800/60 bg-zinc-900/20 mb-8">
+              <div className="syne text-sm font-bold text-white mb-5">The Math: How We Reach 500,000 MXN</div>
+
+              <div className="grid sm:grid-cols-3 gap-4 mb-6">
+                {[
+                  { tier: 'Explorer', price: '$50', wmon: '139', color: '#06b6d4', members: '200' },
+                  { tier: 'Builder', price: '$200', wmon: '556', color: '#8b5cf6', members: '100' },
+                  { tier: 'Founder', price: '$500', wmon: '1,389', color: '#f59e0b', members: '40' },
+                ].map((t) => (
+                  <div key={t.tier} className="p-4 rounded-lg border border-zinc-800/40 bg-zinc-900/30">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-1.5 h-1.5 rounded-full" style={{ background: t.color }} />
+                      <span className="syne text-xs font-bold text-white">{t.tier}</span>
+                    </div>
+                    <div className="text-[12px] text-zinc-500 space-y-1">
+                      <div className="flex justify-between">
+                        <span>MXN/mo</span>
+                        <span className="text-zinc-400">{t.price}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>WMON/mo</span>
+                        <span className="text-zinc-400">{t.wmon}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Target members</span>
+                        <span className="text-zinc-400">{t.members}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="p-4 rounded-lg border border-cyan-500/10 bg-cyan-500/[0.02] text-[12px] text-zinc-400 space-y-1.5">
+                <div className="flex justify-between">
+                  <span>200 Explorers &times; $50 &times; 12 mo</span>
+                  <span className="text-zinc-300">120,000 MXN</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>100 Builders &times; $200 &times; 12 mo</span>
+                  <span className="text-zinc-300">240,000 MXN</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>40 Founders &times; $500 &times; 12 mo</span>
+                  <span className="text-zinc-300">240,000 MXN</span>
+                </div>
+                <div className="border-t border-zinc-800/60 my-2" />
+                <div className="flex justify-between font-medium">
+                  <span>Total collected</span>
+                  <span className="text-white">600,000 MXN</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Treasury (5%)</span>
+                  <span className="text-zinc-300">-30,000 MXN</span>
+                </div>
+                <div className="flex justify-between font-medium">
+                  <span className="gt">Community Pool (95%)</span>
+                  <span className="gt">570,000 MXN</span>
+                </div>
+                <div className="border-t border-zinc-800/60 my-2" />
+                <div className="flex justify-between">
+                  <span>~5 graduating founders &times; ~100K each</span>
+                  <span className="text-amber-400 font-medium">~500,000 MXN</span>
+                </div>
+                <div className="flex justify-between text-zinc-600">
+                  <span>Remaining buffer</span>
+                  <span>~70,000 MXN</span>
+                </div>
+              </div>
+            </div>
+          </Reveal>
+
+          {/* Contract features */}
+          <Reveal delay={300}>
+            <div className="grid sm:grid-cols-2 gap-4 mb-8">
+              {[
+                {
+                  title: 'Soulbound NFT Cards',
+                  desc: 'Each member gets a non-transferable on-chain SVG membership card on first payment. Your proof of participation — forever on Monad.',
+                  color: '#06b6d4',
+                },
+                {
+                  title: 'Payment Cap (12 months)',
+                  desc: 'Smart contract enforces max 12 monthly payments per member with a 25-day minimum interval. No overpayment possible.',
+                  color: '#8b5cf6',
+                },
+                {
+                  title: 'Audited Security',
+                  desc: 'Ownable2Step, ReentrancyGuard, SafeERC20, checks-effects-interactions pattern. 4 rounds of security review.',
+                  color: '#f59e0b',
+                },
+                {
+                  title: 'Adjustable WMON Prices',
+                  desc: 'Tier prices in WMON are adjusted to match MXN targets as MON/MXN rate fluctuates. Transparent and verifiable on-chain.',
+                  color: '#06b6d4',
+                },
+              ].map((item, i) => (
+                <div key={item.title} className="p-5 rounded-xl border border-zinc-800/60 bg-zinc-900/20">
+                  <div className="w-1.5 h-1.5 rounded-full mb-3" style={{ background: item.color }} />
+                  <div className="syne text-xs font-bold text-white mb-1">{item.title}</div>
+                  <p className="text-[11px] text-zinc-500 leading-relaxed">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </Reveal>
+
+          {/* Contract link */}
+          <Reveal delay={400}>
+            <div className="text-center">
+              <a
+                href="https://monadscan.com/address/0xEae06514a0d3daf610cC0778B27f387018521Ab5"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 syne text-[11px] font-bold tracking-[0.1em] uppercase py-3 px-6 rounded-lg bg-cyan-500/10 text-cyan-400 hover:brightness-110 transition-all"
+              >
+                <span>View Contract on MonadScan</span>
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <path d="M3 9L9 3M9 3H4.5M9 3V7.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </a>
+              <p className="text-[10px] text-zinc-800 mt-3">
+                TurboCohortV6 &middot; 0xEae0...1Ab5 &middot; Verified on Monad
+              </p>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      <div className="divider mx-6" />
+
       {/* HOW TO REGISTER */}
       <section id="register" className="py-28 md:py-36 px-6">
         <div className="max-w-4xl mx-auto">
