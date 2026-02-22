@@ -202,6 +202,7 @@ export default function TurboPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [boost, setBoost] = useState(0);
+  const [openCode, setOpenCode] = useState<number | null>(null);
 
   // On-chain payment state
   const [payStep, setPayStep] = useState<'idle' | 'approving' | 'paying' | 'success' | 'error'>('idle');
@@ -796,37 +797,123 @@ export default function TurboPage() {
             </div>
           </Reveal>
 
-          {/* Contract features */}
+          {/* Interactive code walkthrough */}
           <Reveal delay={300}>
-            <div className="grid sm:grid-cols-2 gap-4 mb-8">
-              {[
-                {
-                  title: 'Soulbound NFT Cards',
-                  desc: 'Each member gets a non-transferable on-chain SVG membership card on first payment. Your proof of participation — forever on Monad.',
-                  color: '#06b6d4',
-                },
-                {
-                  title: 'Payment Cap (12 months)',
-                  desc: 'Smart contract enforces max 12 monthly payments per member with a 25-day minimum interval. No overpayment possible.',
-                  color: '#8b5cf6',
-                },
-                {
-                  title: 'Audited Security',
-                  desc: 'Ownable2Step, ReentrancyGuard, SafeERC20, checks-effects-interactions pattern. 4 rounds of security review.',
-                  color: '#f59e0b',
-                },
-                {
-                  title: 'Adjustable WMON Prices',
-                  desc: 'Tier prices in WMON are adjusted to match MXN targets as MON/MXN rate fluctuates. Transparent and verifiable on-chain.',
-                  color: '#06b6d4',
-                },
-              ].map((item, i) => (
-                <div key={item.title} className="p-5 rounded-xl border border-zinc-800/60 bg-zinc-900/20">
-                  <div className="w-1.5 h-1.5 rounded-full mb-3" style={{ background: item.color }} />
-                  <div className="syne text-xs font-bold text-white mb-1">{item.title}</div>
-                  <p className="text-[11px] text-zinc-500 leading-relaxed">{item.desc}</p>
-                </div>
-              ))}
+            <div className="mb-8">
+              <div className="syne text-sm font-bold text-white mb-4">Code Walkthrough: TurboCohortV6.sol</div>
+              <div className="space-y-2">
+                {([
+                  {
+                    title: 'payMonthly() — The Core Payment Function',
+                    color: '#06b6d4',
+                    lines: [
+                      { num: 259, code: 'function payMonthly(Tier tier) external nonReentrant {', note: 'Entry point for all payments. nonReentrant prevents reentrancy attacks.' },
+                      { num: 261, code: '    require(c.active, "no active cohort");', note: 'Can only pay during an active cohort period.' },
+                      { num: 263, code: '    require(!m.banned, "member banned");', note: 'Banned members are blocked from further payments.' },
+                      { num: 267, code: '    if (m.tier == Tier.None) {', note: 'First-time payer? Auto-register them as a new member.' },
+                      { num: 269, code: '        m.tier = tier;', note: 'Their chosen tier (Explorer/Builder/Founder) is locked in.' },
+                      { num: 278, code: '    require(m.monthsPaid < MAX_PAYMENTS, "max payments reached");', note: 'Hard cap at 12 monthly payments. Contract enforced — no overpaying.' },
+                      { num: 280, code: '    require(block.timestamp >= m.lastPaymentTime + MIN_PAYMENT_INTERVAL,', note: '25-day minimum between payments prevents double-charging.' },
+                    ],
+                  },
+                  {
+                    title: '95/5 Fee Split — Where Your Money Goes',
+                    color: '#8b5cf6',
+                    lines: [
+                      { num: 50, code: 'uint256 public constant TREASURY_FEE_BPS = 500; // 5%', note: 'Treasury fee is hardcoded at 5%. Cannot be changed — ever.' },
+                      { num: 286, code: 'uint256 price = tierPrice[m.tier];', note: 'Reads the current WMON price for the member\'s tier.' },
+                      { num: 287, code: 'require(price > 0, "tier price not set");', note: 'Safety check — prevents payments if prices aren\'t configured.' },
+                      { num: 290, code: 'uint256 fee = (price * TREASURY_FEE_BPS) / BPS_DENOMINATOR;', note: 'Calculates 5% treasury fee. e.g. 139 WMON × 5% = 6.95 WMON.' },
+                      { num: 291, code: 'uint256 toPool = price - fee;', note: 'Remaining 95% goes to the community pool. e.g. 132.05 WMON.' },
+                      { num: 311, code: 'wmon.safeTransferFrom(msg.sender, treasury, fee);', note: '5% sent to treasury wallet. SafeERC20 ensures transfer succeeds.' },
+                      { num: 312, code: 'wmon.safeTransferFrom(msg.sender, address(this), toPool);', note: '95% locked in the contract. Held until founder distribution.' },
+                    ],
+                  },
+                  {
+                    title: 'Soulbound NFT — Your Membership Card',
+                    color: '#f59e0b',
+                    lines: [
+                      { num: 301, code: 'uint256 mintedTokenId = 0;', note: 'NFT only minted on first payment — one card per member.' },
+                      { num: 302, code: 'if (m.tokenId == 0) {', note: 'Check if member already has a card. No duplicates.' },
+                      { num: 303, code: '    _nextTokenId++;', note: 'Sequential token IDs. Each card is unique.' },
+                      { num: 316, code: '    _mint(msg.sender, mintedTokenId);', note: 'Uses _mint (not _safeMint) — soulbound, no callback needed.' },
+                      { num: 450, code: 'require(from == address(0) || to == address(0), "soulbound: non-transferable");', note: 'Cards cannot be transferred or sold. Yours forever on Monad.' },
+                      { num: 455, code: 'function tokenURI(uint256 tokenId) public view override returns (string memory) {', note: 'On-chain SVG art. No IPFS dependency — fully on Monad.' },
+                    ],
+                  },
+                  {
+                    title: 'selectFounders() — Pool Distribution',
+                    color: '#06b6d4',
+                    lines: [
+                      { num: 356, code: 'function selectFounders(uint256 cohortId, address[] calldata founders, uint256[] calldata amounts)', note: 'Owner selects graduating founders and how much each receives.' },
+                      { num: 366, code: 'require(!c.active, "cohort still active");', note: 'Distribution only after the cohort ends. No early withdrawals.' },
+                      { num: 374, code: 'require(m.monthsPaid > 0, "never paid");', note: 'Only members who actually paid can be selected as founders.' },
+                      { num: 375, code: 'require(!m.isFounder, "already selected");', note: 'Each founder can only be selected once. No double-dipping.' },
+                      { num: 378, code: 'require(amount <= c.poolBalance, "exceeds pool balance");', note: 'Cannot distribute more than what\'s in the pool.' },
+                      { num: 380, code: 'c.poolBalance -= amount;', note: 'Pool balance decremented. On-chain accounting.' },
+                      { num: 384, code: 'wmon.safeTransfer(founders[i], amount);', note: 'WMON sent directly from contract to founder\'s wallet.' },
+                    ],
+                  },
+                  {
+                    title: 'Security — 4 Layers of Protection',
+                    color: '#8b5cf6',
+                    lines: [
+                      { num: 4, code: 'import "@openzeppelin/contracts/access/Ownable2Step.sol";', note: '2-step ownership transfer. Prevents accidental owner change.' },
+                      { num: 8, code: 'import "@openzeppelin/contracts/security/ReentrancyGuard.sol";', note: 'Blocks reentrancy attacks on payment and distribution functions.' },
+                      { num: 6, code: 'import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";', note: 'Safe token transfers that revert on failure instead of returning false.' },
+                      { num: 52, code: 'uint256 public constant MAX_TIER_PRICE = 2000 ether;', note: 'Price cap at 2000 WMON. Prevents owner from setting absurd prices.' },
+                      { num: 176, code: 'require(explorer <= builder && builder <= founder, "invalid tier ordering");', note: 'Enforces Explorer < Builder < Founder pricing. Always.' },
+                      { num: 293, code: '// Update state BEFORE external calls (checks-effects-interactions)', note: 'State updated before any token transfer. Industry-standard security pattern.' },
+                    ],
+                  },
+                ] as const).map((section, i) => (
+                  <div key={i} className="rounded-xl border border-zinc-800/60 bg-zinc-900/20 overflow-hidden">
+                    <button
+                      onClick={() => setOpenCode(openCode === i ? null : i)}
+                      className="w-full flex items-center justify-between gap-4 p-4 text-left bg-transparent border-none cursor-pointer"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: section.color }} />
+                        <span className="syne font-semibold text-[13px] text-zinc-300">{section.title}</span>
+                      </div>
+                      <svg
+                        width="14" height="14" viewBox="0 0 16 16" fill="none"
+                        className="flex-shrink-0 transition-transform duration-300"
+                        style={{ transform: openCode === i ? 'rotate(45deg)' : 'none' }}
+                      >
+                        <path d="M8 3v10M3 8h10" stroke="#52525b" strokeWidth="1.5" strokeLinecap="round" />
+                      </svg>
+                    </button>
+                    <div
+                      className="transition-all duration-300 overflow-hidden"
+                      style={{
+                        maxHeight: openCode === i ? '800px' : '0',
+                        opacity: openCode === i ? 1 : 0,
+                      }}
+                    >
+                      <div className="px-4 pb-4 space-y-1">
+                        {section.lines.map((line, j) => (
+                          <div key={j} className="group rounded-lg hover:bg-zinc-800/30 transition-colors">
+                            <div className="flex gap-3 p-2">
+                              <span className="text-[10px] font-mono text-zinc-700 w-8 flex-shrink-0 text-right pt-0.5">
+                                L{line.num}
+                              </span>
+                              <div className="min-w-0 flex-1">
+                                <code className="block text-[11px] font-mono text-cyan-400/80 whitespace-pre-wrap break-all leading-relaxed">
+                                  {line.code}
+                                </code>
+                                <p className="text-[11px] text-zinc-500 mt-1 leading-relaxed">
+                                  {line.note}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </Reveal>
 
