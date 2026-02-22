@@ -126,6 +126,8 @@ export default function StatusPage() {
   const [balanceLoading, setBalanceLoading] = useState(false);
   const [nftImageUri, setNftImageUri] = useState<string | null>(null);
   const [nftName, setNftName] = useState<string | null>(null);
+  const [isMember, setIsMember] = useState<boolean | null>(null);
+  const [memberTier, setMemberTier] = useState<number>(0);
 
   // Sync selectedTier when application loads
   useEffect(() => {
@@ -236,8 +238,13 @@ export default function StatusPage() {
         functionName: 'getMember',
         args: [cohortId, walletAddress],
       });
-      const tokenId = member[6]; // tokenId field
-      if (Number(tokenId) === 0) return;
+      const tokenId = member.tokenId;
+      if (Number(tokenId) === 0) {
+        setIsMember(false);
+        return;
+      }
+      setIsMember(true);
+      setMemberTier(Number(member.tier));
       const uri = await publicClient.readContract({
         address: TURBO_COHORT_ADDRESS,
         abi: TURBO_COHORT_ABI,
@@ -245,18 +252,22 @@ export default function StatusPage() {
         args: [tokenId],
       });
       // uri is data:application/json;base64,...
-      const jsonStr = atob((uri as string).split(',')[1]);
-      const metadata = JSON.parse(jsonStr);
-      if (metadata.image) setNftImageUri(metadata.image);
-      if (metadata.name) setNftName(metadata.name);
+      const uriStr = uri as string;
+      if (uriStr && uriStr.includes(',')) {
+        const jsonStr = atob(uriStr.split(',')[1]);
+        const metadata = JSON.parse(jsonStr);
+        if (metadata.image) setNftImageUri(metadata.image);
+        if (metadata.name) setNftName(metadata.name);
+      }
     } catch (err) {
       console.error('Failed to fetch NFT card:', err);
+      setIsMember(false);
     }
   }, [walletAddress]);
 
   useEffect(() => {
-    if (walletAddress && application) fetchNftCard();
-  }, [walletAddress, application, fetchNftCard]);
+    if (walletAddress) fetchNftCard();
+  }, [walletAddress, fetchNftCard]);
 
   useEffect(() => {
     document.body.style.backgroundColor = '#060608';
@@ -351,8 +362,9 @@ export default function StatusPage() {
 
       setPayResult({ txHash: payTx as string, amount: formatUnits(price, 18) });
       setPayStep('success');
-      // Fetch the newly minted NFT card
-      setTimeout(() => fetchNftCard(), 2000);
+      setIsMember(true);
+      // Fetch the newly minted NFT card after chain confirms
+      setTimeout(() => fetchNftCard(), 3000);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Payment failed';
       setPayError(message.includes('user rejected') ? 'Transaction was rejected.' : message);
@@ -387,8 +399,51 @@ export default function StatusPage() {
             </div>
           </Reveal>
 
+          {/* Active member card */}
+          {authenticated && isMember === true && (
+            <Reveal delay={100}>
+              <div className="space-y-5">
+                <div className="text-center p-6 rounded-2xl border border-cyan-500/15 bg-cyan-500/[0.03]">
+                  <div className="syne text-lg font-bold gt mb-2">Active Member</div>
+                  <p className="text-zinc-500 text-xs mb-4">
+                    {TIER_NAMES[memberTier] || 'Explorer'} Tier &middot; Cohort #1
+                  </p>
+                  {nftImageUri ? (
+                    <div className="my-4">
+                      <img
+                        src={nftImageUri}
+                        alt={nftName || 'TURBO Membership NFT'}
+                        className="mx-auto rounded-xl border border-zinc-700/50 shadow-lg"
+                        style={{ maxWidth: 300 }}
+                      />
+                      {nftName && <p className="text-zinc-400 text-[11px] mt-3 syne font-semibold">{nftName}</p>}
+                    </div>
+                  ) : (
+                    <div className="text-zinc-600 text-sm py-8">Loading NFT card...</div>
+                  )}
+                  <div className="flex gap-3 justify-center mt-4">
+                    <a
+                      href="/governance"
+                      className="inline-block text-[11px] syne font-bold tracking-[0.08em] uppercase py-2 px-4 rounded-lg bg-cyan-500/10 text-cyan-400 hover:brightness-110 transition-all"
+                    >
+                      Governance
+                    </a>
+                    <a
+                      href={`https://monadscan.com/address/${TURBO_COHORT_ADDRESS}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block text-[11px] syne font-bold tracking-[0.08em] uppercase py-2 px-4 rounded-lg bg-zinc-800/50 text-zinc-400 hover:brightness-110 transition-all"
+                    >
+                      View on MonadScan
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </Reveal>
+          )}
+
           {/* Email lookup form */}
-          {!application && (
+          {!application && isMember !== true && (
             <Reveal delay={100}>
               <form onSubmit={handleLookup} className="space-y-4">
                 <div>

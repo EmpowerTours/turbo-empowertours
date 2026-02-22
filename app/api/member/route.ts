@@ -38,10 +38,10 @@ export async function GET(req: NextRequest) {
       args: [cohortId, address as `0x${string}`],
     });
 
-    // getMember returns: name, email, telegram, tier, monthsPaid, lastPayment, tokenId, paymentTimestamps, banned
-    const tier = memberData[3];
-    const monthsPaid = memberData[4];
-    const lastPayment = memberData[5];
+    // getMember returns Member struct: tier, cohortId, monthsPaid, lastPaymentTime, totalPaid, isFounder, founderAmount, tokenId, banned
+    const tier = memberData.tier;
+    const monthsPaid = memberData.monthsPaid;
+    const lastPayment = memberData.lastPaymentTime;
 
     // Fetch tier prices
     const tierPrices = await Promise.all(
