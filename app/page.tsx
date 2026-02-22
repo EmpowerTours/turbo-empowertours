@@ -83,6 +83,14 @@ const FAQS = [
     q: 'Do I need coding experience?',
     a: 'No. TURBO is designed to take you from zero to builder. With AI-powered vibe coding, anyone with drive can build real products. We\'ll teach you everything you need.',
   },
+  {
+    q: 'What happens to leftover funds in the pool?',
+    a: 'After Graduating Founders are selected and paid, any remaining WMON stays in the contract. The admin can roll leftover funds into the next cohort\'s pool as a head start, distribute pro-rata refunds to members, or allocate to program operations. The withdrawRemainingPool function is onlyOwner — fully transparent and auditable on-chain.',
+  },
+  {
+    q: 'Do selected founders get to vote in future cohorts?',
+    a: 'Yes. Every Graduating Founder is automatically added to the Founders Council when selected. The council grows with every cohort — Cohort 1 founders vote in Cohort 2, Cohort 1+2 founders vote in Cohort 3, and so on. Governance becomes increasingly decentralized over time.',
+  },
 ];
 
 const STEPS = [
@@ -927,6 +935,17 @@ export default function TurboPage() {
                       { num: 204, code: 'function selectFoundersDirect(uint256 cohortId, ...)', note: 'Cohort 1 only: admin selects founders directly. Auto-adds them to council.' },
                       { num: 209, code: 'require(cohortId < GOVERNANCE_COHORT_THRESHOLD, "use governance for this cohort");', note: 'Hard-coded: Cohort 2+ MUST use council governance. No admin override.' },
                       { num: 379, code: 'function renounceOwnership() public pure override { revert("renounce disabled"); }', note: 'Admin cannot abandon the contract. Prevents accidental lockout.' },
+                    ],
+                  },
+                  {
+                    title: 'Remaining Pool Funds — What Happens After Selection',
+                    color: '#06b6d4',
+                    lines: [
+                      { num: 378, code: 'require(amount <= c.poolBalance, "exceeds pool balance");', note: 'Founder payouts are deducted from the pool. Any remainder stays in the contract.' },
+                      { num: 380, code: 'c.poolBalance -= amount;', note: 'Pool balance is tracked per cohort. After all founders are paid, leftover stays on-chain.' },
+                      { num: 155, code: 'function withdrawRemainingPool(uint256 cohortId, address to, uint256 amount) external onlyOwner {', note: 'Admin can withdraw leftover funds — roll into next cohort, refund members, or fund operations.' },
+                      { num: 424, code: 'function quorumRequired() public view returns (uint256) {', note: 'Council grows each cohort. Cohort 3 needs 60% of ~10 members (6 votes). Cohort 4 needs 60% of ~15 (9 votes).' },
+                      { num: 456, code: 'if (_council.add(founders[i])) { emit CouncilMemberAdded(founders[i]); }', note: 'New founders auto-join the council. The council never shrinks — only grows with each cohort.' },
                     ],
                   },
                 ] as const).map((section, i) => (
