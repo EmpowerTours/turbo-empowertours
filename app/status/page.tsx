@@ -97,7 +97,7 @@ interface ApplicationData {
 /* ── Page ── */
 
 export default function StatusPage() {
-  const { login, authenticated, ready } = usePrivy();
+  const { login, authenticated, ready, user } = usePrivy();
   const { wallets } = useWallets();
 
   // Lookup state
@@ -160,13 +160,27 @@ export default function StatusPage() {
       setWmonBalance(formatUnits(balance, 18));
       setTierPrice(price);
       setHasPassport(Number(passportBal) > 0);
+      if (Number(passportBal) === 0 && user?.farcaster?.ownerAddress) {
+        const fcAddr = user.farcaster.ownerAddress as Address;
+        if (fcAddr.toLowerCase() !== walletAddress.toLowerCase()) {
+          try {
+            const fcBal = await publicClient.readContract({
+              address: PASSPORT_ADDRESS,
+              abi: PASSPORT_ABI,
+              functionName: 'balanceOf',
+              args: [fcAddr],
+            });
+            if (Number(fcBal) > 0) setHasPassport(true);
+          } catch {}
+        }
+      }
     } catch (err) {
       console.error('Failed to fetch balance/price:', err);
       setPayError('Failed to load wallet data. Please try again.');
     } finally {
       setBalanceLoading(false);
     }
-  }, [walletAddress, application, tierNum, activeTier]);
+  }, [walletAddress, application, tierNum, activeTier, user]);
 
   useEffect(() => {
     fetchBalanceAndPrice();
@@ -484,7 +498,7 @@ export default function StatusPage() {
                             <div className="text-amber-400 text-sm text-center p-4 rounded-lg bg-amber-500/5 border border-amber-500/10">
                               <div className="syne font-bold text-[12px] mb-1">EmpowerTours Passport Required</div>
                               <p className="text-[11px] text-zinc-500 mb-2">You need an EmpowerTours Passport NFT to participate in TURBO. LATAM preferred, all countries welcome.</p>
-                              <a href="https://monadscan.com/address/0x93126e59004692b01961be505aa04f55d5bd1851" target="_blank" rel="noopener noreferrer" className="text-[11px] text-amber-400 underline underline-offset-2">Mint Passport</a>
+                              <a href="/passport" className="text-[11px] text-amber-400 underline underline-offset-2">Mint Passport</a>
                             </div>
                           )}
 

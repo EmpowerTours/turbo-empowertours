@@ -154,7 +154,7 @@ async function waitForTx(hash: string): Promise<void> {
 /* ── Page ── */
 
 export default function GovernancePage() {
-  const { login, authenticated, ready } = usePrivy();
+  const { login, authenticated, ready, user } = usePrivy();
   const { wallets } = useWallets();
 
   const connectedWallet = wallets[0];
@@ -253,6 +253,20 @@ export default function GovernancePage() {
             args: [walletAddress],
           });
           setHasPassport(Number(passportBalance) > 0);
+          if (Number(passportBalance) === 0 && user?.farcaster?.ownerAddress) {
+            const fcAddr = user.farcaster.ownerAddress as Address;
+            if (fcAddr.toLowerCase() !== walletAddress.toLowerCase()) {
+              try {
+                const fcBal = await publicClient.readContract({
+                  address: PASSPORT_ADDRESS,
+                  abi: PASSPORT_ABI,
+                  functionName: 'balanceOf',
+                  args: [fcAddr],
+                });
+                if (Number(fcBal) > 0) setHasPassport(true);
+              } catch {}
+            }
+          }
         } catch {
           setHasPassport(false);
         }
@@ -322,7 +336,7 @@ export default function GovernancePage() {
     } finally {
       setLoading(false);
     }
-  }, [walletAddress]);
+  }, [walletAddress, user]);
 
   useEffect(() => {
     fetchData();
@@ -483,9 +497,7 @@ export default function GovernancePage() {
                     To participate in TURBO governance, you must hold an <span className="text-amber-400 font-medium">EmpowerTours Passport NFT</span>. LATAM passports preferred, but all countries welcome.
                   </p>
                   <a
-                    href={`https://monadscan.com/address/${PASSPORT_ADDRESS}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href="/passport"
                     className="inline-flex items-center gap-2 syne text-[11px] font-bold tracking-[0.08em] uppercase py-2 px-4 rounded-lg bg-amber-500/10 text-amber-400 hover:brightness-110 transition-all"
                   >
                     <span>Mint Passport</span>
