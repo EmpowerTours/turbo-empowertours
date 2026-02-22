@@ -116,9 +116,12 @@ export default function StatusPage() {
 
   const tierNum = application ? TIERS[application.tier] ?? 1 : 1;
 
+  const [balanceLoading, setBalanceLoading] = useState(false);
+
   // Fetch WMON balance and tier price when wallet connects
   const fetchBalanceAndPrice = useCallback(async () => {
     if (!walletAddress || application === null) return;
+    setBalanceLoading(true);
     try {
       const [balance, price] = await Promise.all([
         publicClient.readContract({
@@ -136,8 +139,11 @@ export default function StatusPage() {
       ]);
       setWmonBalance(formatUnits(balance, 18));
       setTierPrice(price);
-    } catch {
-      // silently fail
+    } catch (err) {
+      console.error('Failed to fetch balance/price:', err);
+      setPayError('Failed to load wallet data. Please try again.');
+    } finally {
+      setBalanceLoading(false);
     }
   }, [walletAddress, application, tierNum]);
 
@@ -175,7 +181,27 @@ export default function StatusPage() {
   };
 
   const handlePayment = async () => {
-    if (!walletAddress || !connectedWallet || !tierPrice || !application) return;
+    if (!walletAddress || !connectedWallet || !application) {
+      setPayError('Wallet not connected. Please connect your wallet first.');
+      return;
+    }
+
+    // Fetch tier price if not yet loaded
+    let price = tierPrice;
+    if (!price) {
+      try {
+        price = await publicClient.readContract({
+          address: TURBO_COHORT_ADDRESS,
+          abi: TURBO_COHORT_ABI,
+          functionName: 'tierPrice',
+          args: [tierNum],
+        });
+        setTierPrice(price);
+      } catch {
+        setPayError('Failed to fetch tier price. Please try again.');
+        return;
+      }
+    }
 
     setPayStep('approving');
     setPayError('');
@@ -192,13 +218,13 @@ export default function StatusPage() {
       });
 
       // Approve if needed
-      if (allowance < tierPrice) {
+      if (allowance < price) {
         const approveTx = await provider.request({
           method: 'eth_sendTransaction',
           params: [{
             from: walletAddress,
             to: WMON_ADDRESS,
-            data: encodeFunctionCall('approve', [TURBO_COHORT_ADDRESS, '0x' + tierPrice.toString(16)]),
+            data: encodeFunctionCall('approve', [TURBO_COHORT_ADDRESS, '0x' + price.toString(16)]),
           }],
         });
         await waitForTx(approveTx as string);
@@ -216,7 +242,7 @@ export default function StatusPage() {
       });
       await waitForTx(payTx as string);
 
-      setPayResult({ txHash: payTx as string, amount: formatUnits(tierPrice, 18) });
+      setPayResult({ txHash: payTx as string, amount: formatUnits(price, 18) });
       setPayStep('success');
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Payment failed';
@@ -397,11 +423,13 @@ export default function StatusPage() {
                           <button
                             type="button"
                             onClick={handlePayment}
-                            disabled={payStep === 'approving' || payStep === 'paying'}
+                            disabled={payStep === 'approving' || payStep === 'paying' || balanceLoading}
                             className="cta-primary w-full"
-                            style={{ opacity: payStep === 'approving' || payStep === 'paying' ? 0.6 : 1 }}
+                            style={{ opacity: payStep === 'approving' || payStep === 'paying' || balanceLoading ? 0.6 : 1 }}
                           >
-                            {payStep === 'approving'
+                            {balanceLoading
+                              ? 'Loading wallet data...'
+                              : payStep === 'approving'
                               ? 'Approving WMON...'
                               : payStep === 'paying'
                               ? 'Processing payment...'
