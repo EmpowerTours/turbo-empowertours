@@ -321,6 +321,14 @@ export default function TurboPage() {
         <div className="boost-fill" style={{ height: `${boost * 100}%` }} />
       </div>
 
+      {/* Top nav */}
+      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-[#060608]/80 backdrop-blur-md border-b border-zinc-900/50">
+        <span className="syne text-sm font-bold gt">TURBO</span>
+        <a href="/status" className="syne text-[11px] font-semibold tracking-[0.1em] uppercase text-zinc-500 hover:text-cyan-400 transition-colors">
+          Already applied? Pay here
+        </a>
+      </nav>
+
       {/* HERO */}
       <header className="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden">
         <div className="orb" style={{ width: 500, height: 500, background: '#06b6d4', opacity: 0.08, top: '-5%', left: '15%' }} />
