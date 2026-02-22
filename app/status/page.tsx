@@ -478,7 +478,7 @@ export default function StatusPage() {
           )}
 
           {/* Application details */}
-          {application && (
+          {application && isMember !== true && (
             <Reveal>
               <div className="space-y-5">
                 {/* Application info card */}
