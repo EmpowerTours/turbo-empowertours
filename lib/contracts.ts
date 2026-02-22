@@ -67,15 +67,15 @@ export const TURBO_COHORT_ABI = [
   },
 ] as const;
 
-// Tier enum matching the contract
+// Tier enum matching the contract: None=0, Explorer=1, Builder=2, Founder=3
 export const TIERS: Record<string, number> = {
-  explorer: 0,
-  builder: 1,
-  founder: 2,
+  explorer: 1,
+  builder: 2,
+  founder: 3,
 };
 
 export const TIER_NAMES: Record<number, string> = {
-  0: 'Explorer',
-  1: 'Builder',
-  2: 'Founder',
+  1: 'Explorer',
+  2: 'Builder',
+  3: 'Founder',
 };
