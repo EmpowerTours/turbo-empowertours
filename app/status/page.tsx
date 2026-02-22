@@ -114,9 +114,20 @@ export default function StatusPage() {
   const connectedWallet = wallets[0];
   const walletAddress = connectedWallet?.address as Address | undefined;
 
-  const tierNum = application ? TIERS[application.tier] ?? 1 : 1;
+  // Allow tier change before first payment
+  const [selectedTier, setSelectedTier] = useState<string | null>(null);
+  const activeTier = selectedTier || (application?.tier ?? 'builder');
+  const tierNum = TIERS[activeTier] ?? 1;
 
+  const [copiedWallet, setCopiedWallet] = useState(false);
   const [balanceLoading, setBalanceLoading] = useState(false);
+
+  // Sync selectedTier when application loads
+  useEffect(() => {
+    if (application && !selectedTier) {
+      setSelectedTier(application.tier);
+    }
+  }, [application, selectedTier]);
 
   // Fetch WMON balance and tier price when wallet connects
   const fetchBalanceAndPrice = useCallback(async () => {
@@ -145,7 +156,7 @@ export default function StatusPage() {
     } finally {
       setBalanceLoading(false);
     }
-  }, [walletAddress, application, tierNum]);
+  }, [walletAddress, application, tierNum, activeTier]);
 
   useEffect(() => {
     fetchBalanceAndPrice();
@@ -335,12 +346,6 @@ export default function StatusPage() {
                       <span className="text-zinc-300">{application.name}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-zinc-600">Tier</span>
-                      <span className="font-medium" style={{ color: tierColor[application.tier] || '#06b6d4' }}>
-                        {TIER_NAMES[TIERS[application.tier]] || application.tier}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
                       <span className="text-zinc-600">Status</span>
                       <span className="text-zinc-300 capitalize">{application.status}</span>
                     </div>
@@ -353,13 +358,46 @@ export default function StatusPage() {
                       </span>
                     </div>
                   </div>
+
+                  {/* Tier selector — changeable before first payment */}
+                  <div className="mt-4 pt-4 border-t border-zinc-800/40">
+                    <div className="text-[11px] tracking-[0.12em] uppercase text-zinc-600 mb-3 syne font-semibold">
+                      Select Tier
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      {([
+                        { value: 'explorer', label: 'Explorer', price: '$50', color: '#06b6d4' },
+                        { value: 'builder', label: 'Builder', price: '$200', color: '#8b5cf6' },
+                        { value: 'founder', label: 'Founder', price: '$500', color: '#f59e0b' },
+                      ] as const).map((t) => (
+                        <button
+                          key={t.value}
+                          type="button"
+                          onClick={() => setSelectedTier(t.value)}
+                          className="p-2.5 rounded-xl border text-center transition-all duration-200"
+                          style={{
+                            borderColor: activeTier === t.value ? t.color : 'rgba(63,63,70,0.3)',
+                            background: activeTier === t.value ? `${t.color}08` : 'transparent',
+                          }}
+                        >
+                          <div className="syne text-xs font-bold text-white">{t.label}</div>
+                          <div className="text-[10px] mt-0.5" style={{ color: activeTier === t.value ? t.color : '#71717a' }}>
+                            {t.price} <span className="text-zinc-700">MXN/mo</span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                    <div className="text-[10px] text-zinc-700 mt-2">
+                      You can change your tier before your first payment.
+                    </div>
+                  </div>
                 </div>
 
                 {/* Payment section */}
                 <div className="p-6 rounded-2xl border border-zinc-800/60 bg-zinc-900/20">
                   <div className="syne text-sm font-bold text-white mb-1">Make Your Payment</div>
                   <p className="text-zinc-600 text-[12px] mb-5">
-                    Pay your monthly {TIER_NAMES[TIERS[application.tier]] || application.tier} tier fee in WMON on Monad.
+                    Pay your monthly {TIER_NAMES[tierNum] || activeTier} tier fee in WMON on Monad.
                   </p>
 
                   {payStep === 'success' && payResult ? (
@@ -387,25 +425,43 @@ export default function StatusPage() {
                         </button>
                       ) : walletAddress ? (
                         <>
-                          <div className="p-3 rounded-lg border border-zinc-800/40 bg-zinc-900/30 text-[12px]">
-                            <div className="flex justify-between mb-1">
-                              <span className="text-zinc-600">Wallet</span>
-                              <span className="text-zinc-400 font-mono text-[10px]">
-                                {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
-                              </span>
+                          <div className="p-4 rounded-lg border border-zinc-800/40 bg-zinc-900/30">
+                            {/* Full wallet address with copy */}
+                            <div className="mb-3">
+                              <div className="text-zinc-600 text-[11px] mb-1.5">Your Privy Wallet</div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(walletAddress);
+                                  setCopiedWallet(true);
+                                  setTimeout(() => setCopiedWallet(false), 2000);
+                                }}
+                                className="w-full flex items-center justify-between gap-2 p-2.5 rounded-lg border border-zinc-700/50 bg-zinc-800/50 hover:border-cyan-500/30 hover:bg-zinc-800/80 transition-all cursor-pointer"
+                                title="Click to copy full address"
+                              >
+                                <span className="font-mono text-[11px] text-cyan-400 break-all text-left leading-relaxed">
+                                  {walletAddress}
+                                </span>
+                                <span className="flex-shrink-0 text-[10px] px-2 py-1 rounded border border-zinc-700/50 bg-zinc-900/50 text-zinc-400 syne font-semibold">
+                                  {copiedWallet ? 'Copied!' : 'Copy'}
+                                </span>
+                              </button>
+                              <div className="text-[10px] text-zinc-700 mt-1">Send WMON to this address on Monad to fund your wallet</div>
                             </div>
-                            {wmonBalance !== null && (
-                              <div className="flex justify-between mb-1">
-                                <span className="text-zinc-600">WMON Balance</span>
-                                <span className="text-zinc-400">{parseFloat(wmonBalance).toFixed(4)} WMON</span>
-                              </div>
-                            )}
-                            {tierPrice !== null && (
-                              <div className="flex justify-between">
-                                <span className="text-zinc-600">Tier Price</span>
-                                <span className="text-zinc-400">{formatUnits(tierPrice, 18)} WMON</span>
-                              </div>
-                            )}
+                            <div className="space-y-1 text-[12px]">
+                              {wmonBalance !== null && (
+                                <div className="flex justify-between">
+                                  <span className="text-zinc-600">WMON Balance</span>
+                                  <span className="text-zinc-400">{parseFloat(wmonBalance).toFixed(4)} WMON</span>
+                                </div>
+                              )}
+                              {tierPrice !== null && (
+                                <div className="flex justify-between">
+                                  <span className="text-zinc-600">Tier Price</span>
+                                  <span className="text-zinc-400">{formatUnits(tierPrice, 18)} WMON</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
 
                           {tierPrice !== null && wmonBalance !== null && parseFloat(wmonBalance) < parseFloat(formatUnits(tierPrice, 18)) && (
