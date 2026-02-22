@@ -766,6 +766,12 @@ export default function TurboPage() {
                   We&apos;ll review your application and get back to you within 48 hours.
                   Make sure you&apos;ve completed steps 1 &amp; 2 above!
                 </p>
+                <p className="text-zinc-600 text-xs">
+                  You can return to pay anytime at{' '}
+                  <a href="/status" className="text-cyan-500 hover:text-cyan-400 transition-colors underline underline-offset-2">
+                    /status
+                  </a>
+                </p>
               </div>
 
               {/* On-chain payment section */}

@@ -19,6 +19,13 @@ export default function Providers({ children }: { children: React.ReactNode }) {
             createOnLogin: 'users-without-wallets',
           },
         },
+        externalWallets: {
+          coinbaseWallet: {
+            config: {
+              preference: { options: 'eoaOnly' },
+            },
+          },
+        },
       }}
     >
       {children}
