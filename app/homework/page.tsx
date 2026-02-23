@@ -97,24 +97,10 @@ export default function HomeworkPage() {
     return acc;
   }, {});
 
-  // GitHub OAuth link URL
-  const githubLinkUrl = walletAddress
-    ? `/api/github/callback?redirect=true` // OAuth is initiated client-side
-    : '#';
-
+  // GitHub OAuth — redirect through server-side /api/github/authorize to get HMAC-signed state
   const buildGithubOAuthUrl = () => {
     if (!walletAddress) return '#';
-    const clientId = 'Iv23liqRktzXrtHxJHwT';
-    const redirectUri = `${window.location.origin}/api/github/callback`;
-    // State is wallet:hmac, but we need server-side signing. Use a simpler approach:
-    // redirect to a server endpoint that generates the OAuth URL
-    const params = new URLSearchParams({
-      client_id: clientId,
-      redirect_uri: redirectUri,
-      scope: 'read:user',
-      state: walletAddress, // Will be verified server-side
-    });
-    return `https://github.com/login/oauth/authorize?${params}`;
+    return `/api/github/authorize?wallet=${walletAddress}`;
   };
 
   return (

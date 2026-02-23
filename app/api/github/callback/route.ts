@@ -2,19 +2,27 @@ import { NextRequest, NextResponse } from 'next/server';
 import { redis } from '@/lib/redis';
 import { verifyState, exchangeCodeForToken, fetchGitHubUser } from '@/lib/homework/github';
 
+function getOrigin(req: NextRequest): string {
+  const proto = req.headers.get('x-forwarded-proto') || 'https';
+  const host = req.headers.get('x-forwarded-host') || req.headers.get('host') || 'localhost:3000';
+  return process.env.NEXT_PUBLIC_APP_URL || `${proto}://${host}`;
+}
+
 export async function GET(req: NextRequest) {
+  const origin = getOrigin(req);
+
   try {
     const { searchParams } = new URL(req.url);
     const code = searchParams.get('code');
     const state = searchParams.get('state');
 
     if (!code || !state) {
-      return NextResponse.redirect(new URL('/homework?error=missing_params', req.url));
+      return NextResponse.redirect(`${origin}/homework?error=missing_params`);
     }
 
     const wallet = verifyState(state);
     if (!wallet) {
-      return NextResponse.redirect(new URL('/homework?error=invalid_state', req.url));
+      return NextResponse.redirect(`${origin}/homework?error=invalid_state`);
     }
 
     const token = await exchangeCodeForToken(code);
@@ -33,9 +41,9 @@ export async function GET(req: NextRequest) {
     await redis.set(`hw:wallet:${ghUser.login.toLowerCase()}`, wallet.toLowerCase());
 
     console.log(`[Homework] GitHub linked: ${wallet} → ${ghUser.login}`);
-    return NextResponse.redirect(new URL('/homework?linked=true', req.url));
+    return NextResponse.redirect(`${origin}/homework?linked=true`);
   } catch (err) {
     console.error('[Homework] OAuth callback error:', err);
-    return NextResponse.redirect(new URL('/homework?error=oauth_failed', req.url));
+    return NextResponse.redirect(`${origin}/homework?error=oauth_failed`);
   }
 }
