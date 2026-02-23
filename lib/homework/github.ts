@@ -114,6 +114,10 @@ export async function pushFileToRepo(
     { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github.v3+json' } },
   );
 
+  if (existing.status === 401) {
+    throw new Error('NEEDS_RELINK');
+  }
+
   const body: Record<string, string> = {
     message,
     content: Buffer.from(content).toString('base64'),
@@ -128,7 +132,7 @@ export async function pushFileToRepo(
     { method: 'PUT', headers: apiHeaders, body: JSON.stringify(body) },
   );
 
-  if (res.status === 403 || res.status === 404) {
+  if (res.status === 401 || res.status === 403 || res.status === 404) {
     throw new Error('NEEDS_RELINK');
   }
   if (!res.ok) {
