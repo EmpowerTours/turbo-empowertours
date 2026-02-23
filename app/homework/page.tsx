@@ -5,6 +5,7 @@ import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { type Address } from 'viem';
 import { CURRICULUM, MILESTONES, PHASE_COLORS } from '@/lib/homework/curriculum';
 import { WEEKLY_REWARD, MILESTONE_BONUSES, getWeekReward } from '@/lib/homework/rewards';
+import AITerminal from '@/components/terminal/AITerminal';
 import './homework.css';
 
 /* ── Scroll reveal ── */
@@ -542,6 +543,18 @@ export default function HomeworkPage() {
           </div>
         </div>
       </footer>
+
+      {/* AI Terminal */}
+      <AITerminal
+        wallet={walletAddress}
+        weekNumber={
+          activePhase
+            ? (phases[activePhase]?.find(w => !completedSet.has(w.week))?.week ??
+               phases[activePhase]?.[0]?.week ??
+               null)
+            : null
+        }
+      />
     </div>
   );
 }

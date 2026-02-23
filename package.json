@@ -12,6 +12,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.78.0",
     "@privy-io/react-auth": "^3.14.1",
     "@upstash/redis": "^1.36.2",
     "next": "16.1.6",
