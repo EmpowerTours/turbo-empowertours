@@ -62,16 +62,21 @@ export async function POST(req: NextRequest) {
     }
 
     // Detect owner
-    let isOwner = false;
-    try {
-      const contractOwner = await publicClient.readContract({
-        address: TURBO_GOVERNANCE_ADDRESS,
-        abi: TURBO_GOVERNANCE_ABI,
-        functionName: 'owner',
-      });
-      isOwner = wallet.toLowerCase() === (contractOwner as string).toLowerCase();
-    } catch {
-      // If contract call fails, default to student mode
+    const OWNER_WALLETS = [
+      '0xEae06514a0d3daf610cC0778B27f387018521Ab5'.toLowerCase(),
+    ];
+    let isOwner = OWNER_WALLETS.includes(wallet.toLowerCase());
+    if (!isOwner) {
+      try {
+        const contractOwner = await publicClient.readContract({
+          address: TURBO_GOVERNANCE_ADDRESS,
+          abi: TURBO_GOVERNANCE_ABI,
+          functionName: 'owner',
+        });
+        isOwner = wallet.toLowerCase() === (contractOwner as string).toLowerCase();
+      } catch {
+        // If contract call fails, default to student mode
+      }
     }
 
     // Rate limiting for students
