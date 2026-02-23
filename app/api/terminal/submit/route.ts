@@ -16,15 +16,18 @@ export async function POST(req: NextRequest) {
     }
 
     // Look up GitHub data from Redis
-    const githubData = await redis.get<{ username: string; token: string }>(
-      `hw:github:${wallet.toLowerCase()}`,
-    );
-    if (!githubData) {
+    const raw = await redis.get(`hw:github:${wallet.toLowerCase()}`);
+    const githubData: { username: string; token: string } | null =
+      typeof raw === 'string' ? JSON.parse(raw) : raw;
+    if (!githubData || !githubData.token) {
+      console.log(`[Submit] No GitHub data for wallet ${wallet.toLowerCase()}, raw:`, typeof raw);
       return Response.json(
         { error: 'GitHub not linked. Please link your GitHub account first.' },
         { status: 400 },
       );
     }
+
+    console.log(`[Submit] Pushing for ${githubData.username}, week ${weekNumber}, token prefix: ${githubData.token.slice(0, 8)}...`);
 
     // Find the curriculum entry
     const week = CURRICULUM.find(w => w.week === weekNumber);

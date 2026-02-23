@@ -110,10 +110,12 @@ export async function pushFileToRepo(
   };
 
   // Check if file already exists (need SHA for updates)
-  const existing = await fetch(
-    `https://api.github.com/repos/${owner}/${repo}/contents/${deliverable}`,
-    { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github.v3+json' } },
-  );
+  const existingUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${deliverable}`;
+  console.log(`[pushFile] GET ${existingUrl} (checking existing)`);
+  const existing = await fetch(existingUrl, {
+    headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github.v3+json' },
+  });
+  console.log(`[pushFile] Existing check: ${existing.status}`);
 
   if (existing.status === 401) {
     throw new Error('NEEDS_RELINK');
@@ -133,7 +135,10 @@ export async function pushFileToRepo(
     { method: 'PUT', headers: apiHeaders, body: JSON.stringify(body) },
   );
 
+  console.log(`[pushFile] PUT response: ${res.status}`);
   if (res.status === 401 || res.status === 403 || res.status === 404) {
+    const errBody = await res.json().catch(() => ({}));
+    console.log(`[pushFile] Error body:`, JSON.stringify(errBody));
     throw new Error('NEEDS_RELINK');
   }
   if (!res.ok) {
