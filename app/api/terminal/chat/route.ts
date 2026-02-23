@@ -7,16 +7,22 @@ import { monad } from '@/lib/monad';
 import { CURRICULUM } from '@/lib/homework/curriculum';
 import { redis } from '@/lib/redis';
 
-const anthropic = new Anthropic(); // uses ANTHROPIC_API_KEY env var
-const privy = new PrivyClient({
-  appId: process.env.NEXT_PUBLIC_PRIVY_APP_ID!,
-  appSecret: process.env.PRIVY_APP_SECRET!,
-});
+let _anthropic: Anthropic | null = null;
+let _privy: PrivyClient | null = null;
+let _publicClient: ReturnType<typeof createPublicClient> | null = null;
 
-const publicClient = createPublicClient({
-  chain: monad,
-  transport: http(),
-});
+function getAnthropic() {
+  if (!_anthropic) _anthropic = new Anthropic();
+  return _anthropic;
+}
+function getPrivy() {
+  if (!_privy) _privy = new PrivyClient({ appId: process.env.NEXT_PUBLIC_PRIVY_APP_ID!, appSecret: process.env.PRIVY_APP_SECRET! });
+  return _privy;
+}
+function getPublicClient() {
+  if (!_publicClient) _publicClient = createPublicClient({ chain: monad, transport: http() });
+  return _publicClient;
+}
 
 const RATE_LIMIT = 50; // messages per hour for students
 const RATE_WINDOW = 3600; // 1 hour in seconds
@@ -66,7 +72,7 @@ export async function POST(req: NextRequest) {
     let allWallets: string[] = [];
     try {
       // Verify token and get user_id
-      const claims = await privy.utils().auth().verifyAccessToken(token);
+      const claims = await getPrivy().utils().auth().verifyAccessToken(token);
 
       // Fetch user from Privy REST API to get linked wallets
       const basicAuth = Buffer.from(
@@ -114,7 +120,7 @@ export async function POST(req: NextRequest) {
     let isOwner = allWallets.some(w => OWNER_WALLETS.includes(w));
     if (!isOwner) {
       try {
-        const contractOwner = await publicClient.readContract({
+        const contractOwner = await getPublicClient().readContract({
           address: TURBO_GOVERNANCE_ADDRESS,
           abi: TURBO_GOVERNANCE_ABI,
           functionName: 'owner',
@@ -150,7 +156,7 @@ export async function POST(req: NextRequest) {
       : getStudentSystemPrompt(weekContext);
 
     // Stream response
-    const stream = anthropic.messages.stream({
+    const stream = getAnthropic().messages.stream({
       model: 'claude-sonnet-4-6',
       max_tokens: 4096,
       system: systemPrompt,
