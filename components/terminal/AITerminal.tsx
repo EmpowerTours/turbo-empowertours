@@ -356,12 +356,12 @@ export default function AITerminal({ wallet, weekNumber }: AITerminalProps) {
               {submitResult?.needsRelink && (
                 <div className="ai-terminal-relink">
                   <span>{submitResult.error}</span>
-                  <a
-                    href={`/api/github/authorize?wallet=${wallet}`}
+                  <button
                     className="ai-terminal-relink-btn"
+                    onClick={() => { window.location.href = `/api/github/authorize?wallet=${wallet}`; }}
                   >
                     Re-link GitHub
-                  </a>
+                  </button>
                 </div>
               )}
 

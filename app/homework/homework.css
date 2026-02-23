@@ -364,6 +364,8 @@
   font-weight: 700;
   text-decoration: none;
   text-align: center;
+  cursor: pointer;
+  font-family: inherit;
   transition: background 0.2s;
 }
 .ai-terminal-relink-btn:hover {
