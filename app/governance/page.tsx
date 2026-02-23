@@ -601,8 +601,8 @@ export default function GovernancePage() {
               </div>
             </Reveal>
 
-            {/* ═══ CREATE PROPOSAL (council, cohort >= 2) ═══ */}
-            {(role === 'council' || role === 'admin') && currentCohortId >= 2 && (
+            {/* ═══ CREATE PROPOSAL (council or admin) ═══ */}
+            {(role === 'council' || role === 'admin') && (
               <Reveal delay={200}>
                 <div className="gov-form-card" style={{ marginBottom: 32 }}>
                   <h2 className="syne text-lg font-bold text-white mb-1">Create Proposal</h2>
