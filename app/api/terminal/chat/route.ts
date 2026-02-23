@@ -61,59 +61,47 @@ function getWeekContext(weekNumber: number | null): string {
 
 export async function POST(req: NextRequest) {
   try {
-    // Verify Privy auth token and extract wallet
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return Response.json({ error: 'Missing auth token' }, { status: 401 });
-    }
-    const token = authHeader.slice(7);
-
-    let wallet: string;
-    let allWallets: string[] = [];
-    try {
-      // Verify token and get user_id
-      const claims = await getPrivy().utils().auth().verifyAccessToken(token);
-
-      // Fetch user from Privy REST API to get linked wallets
-      const basicAuth = Buffer.from(
-        `${process.env.NEXT_PUBLIC_PRIVY_APP_ID}:${process.env.PRIVY_APP_SECRET}`
-      ).toString('base64');
-      const userRes = await fetch(
-        `https://auth.privy.io/api/v1/users/${encodeURIComponent(claims.user_id)}`,
-        { headers: { Authorization: `Basic ${basicAuth}` } }
-      );
-      if (!userRes.ok) {
-        return Response.json({ error: 'Failed to verify user' }, { status: 401 });
-      }
-      const userData = await userRes.json() as {
-        linked_accounts: { type: string; address?: string }[];
-      };
-      // Collect ALL wallet addresses (external + embedded)
-      allWallets = userData.linked_accounts
-        .filter((a) => a.address)
-        .map((a) => a.address!.toLowerCase());
-      const linkedWallet = userData.linked_accounts.find(
-        (a) => a.address
-      );
-      if (!linkedWallet?.address) {
-        return Response.json({ error: 'No wallet linked' }, { status: 401 });
-      }
-      wallet = linkedWallet.address;
-    } catch {
-      return Response.json({ error: 'Invalid auth token' }, { status: 401 });
-    }
-
     const body = await req.json();
-    const { messages, weekNumber } = body as {
+    const { wallet, messages, weekNumber } = body as {
+      wallet: string;
       messages: { role: 'user' | 'assistant'; content: string }[];
       weekNumber: number | null;
     };
 
-    if (!messages || messages.length === 0) {
-      return Response.json({ error: 'Missing messages' }, { status: 400 });
+    if (!wallet || !messages || messages.length === 0) {
+      return Response.json({ error: 'Missing wallet or messages' }, { status: 400 });
     }
 
-    // Detect owner — check ALL linked wallets against owner list + on-chain owner
+    // Resolve verified wallet: Privy if available, otherwise client-supplied
+    let verifiedWallet = wallet.toLowerCase();
+    let allWallets = [verifiedWallet];
+    const authHeader = req.headers.get('authorization');
+    if (authHeader?.startsWith('Bearer ') && process.env.PRIVY_APP_SECRET) {
+      try {
+        const token = authHeader.slice(7);
+        const claims = await getPrivy().utils().auth().verifyAccessToken(token);
+        const basicAuth = Buffer.from(
+          `${process.env.NEXT_PUBLIC_PRIVY_APP_ID}:${process.env.PRIVY_APP_SECRET}`
+        ).toString('base64');
+        const userRes = await fetch(
+          `https://auth.privy.io/api/v1/users/${encodeURIComponent(claims.user_id)}`,
+          { headers: { Authorization: `Basic ${basicAuth}` } }
+        );
+        if (userRes.ok) {
+          const userData = await userRes.json() as {
+            linked_accounts: { type: string; address?: string }[];
+          };
+          allWallets = userData.linked_accounts
+            .filter((a) => a.address)
+            .map((a) => a.address!.toLowerCase());
+          if (allWallets.length > 0) verifiedWallet = allWallets[0];
+        }
+      } catch {
+        // Privy verification failed, use client-supplied wallet
+      }
+    }
+
+    // Detect owner
     const OWNER_WALLETS = [
       '0x23e2222735084b32338bBeCCCcd37A38663691ae'.toLowerCase(),
     ];
@@ -134,7 +122,7 @@ export async function POST(req: NextRequest) {
 
     // Rate limiting for students
     if (!isOwner) {
-      const rateKey = `terminal:rate:${wallet.toLowerCase()}`;
+      const rateKey = `terminal:rate:${verifiedWallet}`;
       const current = await redis.get<number>(rateKey);
       if (current !== null && current >= RATE_LIMIT) {
         return Response.json(

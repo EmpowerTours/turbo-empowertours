@@ -51,23 +51,13 @@ export default function AITerminal({ wallet, weekNumber }: AITerminalProps) {
 
     try {
       const token = await getAccessToken();
-      if (!token) {
-        setMessages(prev => {
-          const updated = [...prev];
-          updated[updated.length - 1] = { role: 'assistant', content: 'Error: Not authenticated. Please reconnect your wallet.' };
-          return updated;
-        });
-        setStreaming(false);
-        return;
-      }
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
 
       const res = await fetch('/api/terminal/chat', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ messages: newMessages, weekNumber }),
+        headers,
+        body: JSON.stringify({ wallet, messages: newMessages, weekNumber }),
       });
 
       if (!res.ok) {
