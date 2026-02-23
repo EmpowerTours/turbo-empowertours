@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { usePrivy } from '@privy-io/react-auth';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -13,6 +14,7 @@ interface AITerminalProps {
 }
 
 export default function AITerminal({ wallet, weekNumber }: AITerminalProps) {
+  const { getAccessToken } = usePrivy();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -48,10 +50,24 @@ export default function AITerminal({ wallet, weekNumber }: AITerminalProps) {
     setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
 
     try {
+      const token = await getAccessToken();
+      if (!token) {
+        setMessages(prev => {
+          const updated = [...prev];
+          updated[updated.length - 1] = { role: 'assistant', content: 'Error: Not authenticated. Please reconnect your wallet.' };
+          return updated;
+        });
+        setStreaming(false);
+        return;
+      }
+
       const res = await fetch('/api/terminal/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ wallet, messages: newMessages, weekNumber }),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ messages: newMessages, weekNumber }),
       });
 
       if (!res.ok) {
