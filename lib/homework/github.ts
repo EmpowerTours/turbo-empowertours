@@ -11,7 +11,7 @@ export function buildOAuthUrl(wallet: string, redirectUri: string): string {
   const params = new URLSearchParams({
     client_id: GITHUB_CLIENT_ID,
     redirect_uri: redirectUri,
-    scope: 'read:user',
+    scope: 'read:user,repo',
     state,
   });
   return `https://github.com/login/oauth/authorize?${params}`;
@@ -91,4 +91,51 @@ export async function checkFileExists(
   if (token) headers.Authorization = `Bearer ${token}`;
   const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, { headers });
   return res.ok;
+}
+
+/** Push (create or update) a file to a GitHub repo via Contents API */
+export async function pushFileToRepo(
+  token: string,
+  owner: string,
+  deliverable: string,
+  content: string,
+  message: string,
+): Promise<{ sha: string; url: string }> {
+  const repo = 'turbo-homework';
+  const apiHeaders = {
+    Authorization: `Bearer ${token}`,
+    Accept: 'application/vnd.github.v3+json',
+    'Content-Type': 'application/json',
+  };
+
+  // Check if file already exists (need SHA for updates)
+  const existing = await fetch(
+    `https://api.github.com/repos/${owner}/${repo}/contents/${deliverable}`,
+    { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github.v3+json' } },
+  );
+
+  const body: Record<string, string> = {
+    message,
+    content: Buffer.from(content).toString('base64'),
+  };
+  if (existing.ok) {
+    const data = await existing.json();
+    body.sha = data.sha;
+  }
+
+  const res = await fetch(
+    `https://api.github.com/repos/${owner}/${repo}/contents/${deliverable}`,
+    { method: 'PUT', headers: apiHeaders, body: JSON.stringify(body) },
+  );
+
+  if (res.status === 403 || res.status === 404) {
+    throw new Error('NEEDS_RELINK');
+  }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || 'Push failed');
+  }
+
+  const result = await res.json();
+  return { sha: result.content.sha, url: result.content.html_url };
 }

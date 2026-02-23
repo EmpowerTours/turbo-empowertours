@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
+import { CURRICULUM } from '@/lib/homework/curriculum';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -20,8 +21,16 @@ export default function AITerminal({ wallet, weekNumber }: AITerminalProps) {
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
+
+  // Submit state
+  const [submitMode, setSubmitMode] = useState(false);
+  const [submitContent, setSubmitContent] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [submitResult, setSubmitResult] = useState<{ success?: boolean; url?: string; error?: string; needsRelink?: boolean } | null>(null);
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -32,10 +41,17 @@ export default function AITerminal({ wallet, weekNumber }: AITerminalProps) {
 
   // Focus input when opened
   useEffect(() => {
-    if (open && inputRef.current) {
+    if (open && inputRef.current && !submitMode) {
       inputRef.current.focus();
     }
-  }, [open]);
+  }, [open, submitMode]);
+
+  // Focus textarea when submit mode opens
+  useEffect(() => {
+    if (submitMode && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [submitMode]);
 
   const sendMessage = useCallback(async () => {
     if (!input.trim() || !wallet || streaming) return;
@@ -133,6 +149,47 @@ export default function AITerminal({ wallet, weekNumber }: AITerminalProps) {
       setStreaming(false);
     }
   }, [input, wallet, messages, streaming, weekNumber]);
+
+  const handleSubmit = useCallback(async () => {
+    if (!wallet || !weekNumber || !submitContent.trim() || submitting) return;
+
+    setSubmitting(true);
+    setSubmitResult(null);
+
+    try {
+      const res = await fetch('/api/terminal/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ wallet, weekNumber, content: submitContent.trim() }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setSubmitResult({ success: true, url: data.url });
+        // Add success message to chat
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: `Week ${weekNumber} submitted successfully! Your deliverable has been pushed to GitHub.`,
+        }]);
+      } else {
+        setSubmitResult({
+          error: data.error || 'Submission failed',
+          needsRelink: data.needsRelink,
+        });
+      }
+    } catch {
+      setSubmitResult({ error: 'Connection failed. Please try again.' });
+    } finally {
+      setSubmitting(false);
+    }
+  }, [wallet, weekNumber, submitContent, submitting]);
+
+  const closeSubmitMode = () => {
+    setSubmitMode(false);
+    setSubmitContent('');
+    setSubmitResult(null);
+  };
 
   const accentColor = isOwner ? '#f59e0b' : '#06b6d4';
 
@@ -250,6 +307,80 @@ export default function AITerminal({ wallet, weekNumber }: AITerminalProps) {
             ))}
           </div>
 
+          {/* Submit Area (overlay on messages area when active) */}
+          {submitMode && (
+            <div className="ai-terminal-submit-area">
+              <div className="ai-terminal-submit-header">
+                <span className="syne" style={{ fontSize: 11, fontWeight: 700, color: '#fff', letterSpacing: '0.06em' }}>
+                  Submit Week {weekNumber}
+                </span>
+                <button onClick={closeSubmitMode} className="ai-terminal-submit-close">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="ai-terminal-submit-file" style={{ borderColor: `${accentColor}20`, color: accentColor }}>
+                {weekNumber && `turbo-homework/${CURRICULUM.find(w => w.week === weekNumber)?.deliverable || `week-${String(weekNumber).padStart(2, '0')}/`}`}
+              </div>
+
+              <textarea
+                ref={textareaRef}
+                className="ai-terminal-submit-textarea"
+                value={submitContent}
+                onChange={e => setSubmitContent(e.target.value)}
+                placeholder="Paste or type your deliverable content here..."
+                disabled={submitting}
+                style={{ borderColor: `${accentColor}20` }}
+              />
+
+              {submitResult?.success && (
+                <div className="ai-terminal-submit-success">
+                  Submitted!{' '}
+                  {submitResult.url && (
+                    <a href={submitResult.url} target="_blank" rel="noopener noreferrer">
+                      View on GitHub
+                    </a>
+                  )}
+                </div>
+              )}
+
+              {submitResult?.error && !submitResult.needsRelink && (
+                <div className="ai-terminal-submit-error">
+                  {submitResult.error}
+                </div>
+              )}
+
+              {submitResult?.needsRelink && (
+                <div className="ai-terminal-relink">
+                  <span>{submitResult.error}</span>
+                  <a
+                    href={`/api/github/authorize?wallet=${wallet}`}
+                    className="ai-terminal-relink-btn"
+                  >
+                    Re-link GitHub
+                  </a>
+                </div>
+              )}
+
+              {!submitResult?.success && (
+                <button
+                  className="ai-terminal-submit-confirm"
+                  onClick={handleSubmit}
+                  disabled={submitting || !submitContent.trim()}
+                  style={{
+                    background: submitContent.trim() && !submitting ? '#22c55e' : '#27272a',
+                    borderColor: submitContent.trim() && !submitting ? '#22c55e' : '#27272a',
+                  }}
+                >
+                  {submitting ? 'Pushing...' : 'Confirm Submit'}
+                </button>
+              )}
+            </div>
+          )}
+
           {/* Input */}
           <div className="ai-terminal-input" style={{ borderTopColor: `${accentColor}15` }}>
             <input
@@ -259,15 +390,15 @@ export default function AITerminal({ wallet, weekNumber }: AITerminalProps) {
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
               placeholder={streaming ? 'Thinking...' : 'Ask about your assignment...'}
-              disabled={streaming}
+              disabled={streaming || submitMode}
               style={{ borderColor: `${accentColor}20` }}
             />
             <button
               onClick={sendMessage}
-              disabled={streaming || !input.trim()}
+              disabled={streaming || !input.trim() || submitMode}
               style={{
-                background: input.trim() && !streaming ? accentColor : '#27272a',
-                borderColor: input.trim() && !streaming ? accentColor : '#27272a',
+                background: input.trim() && !streaming && !submitMode ? accentColor : '#27272a',
+                borderColor: input.trim() && !streaming && !submitMode ? accentColor : '#27272a',
               }}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={input.trim() && !streaming ? '#000' : '#52525b'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -275,9 +406,24 @@ export default function AITerminal({ wallet, weekNumber }: AITerminalProps) {
                 <polygon points="22 2 15 22 11 13 2 9 22 2" />
               </svg>
             </button>
+            {weekNumber && !submitMode && (
+              <button
+                className="ai-terminal-submit-btn"
+                onClick={() => { setSubmitMode(true); setSubmitResult(null); }}
+                disabled={streaming}
+                title={`Submit Week ${weekNumber}`}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="16 16 12 12 8 16" />
+                  <line x1="12" y1="12" x2="12" y2="21" />
+                  <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
+                </svg>
+              </button>
+            )}
           </div>
         </div>
       )}
     </>
   );
 }
+
