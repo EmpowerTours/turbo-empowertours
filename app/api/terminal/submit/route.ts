@@ -19,15 +19,12 @@ export async function POST(req: NextRequest) {
     const raw = await redis.get(`hw:github:${wallet.toLowerCase()}`);
     const githubData: { username: string; token: string } | null =
       typeof raw === 'string' ? JSON.parse(raw) : raw;
-    if (!githubData || !githubData.token) {
-      console.log(`[Submit] No GitHub data for wallet ${wallet.toLowerCase()}, raw:`, typeof raw);
+    if (!githubData || !githubData.username) {
       return Response.json(
         { error: 'GitHub not linked. Please link your GitHub account first.' },
         { status: 400 },
       );
     }
-
-    console.log(`[Submit] Pushing for ${githubData.username}, week ${weekNumber}, token prefix: ${githubData.token.slice(0, 8)}...`);
 
     // Find the curriculum entry
     const week = CURRICULUM.find(w => w.week === weekNumber);
@@ -35,35 +32,24 @@ export async function POST(req: NextRequest) {
       return Response.json({ error: `Invalid week number: ${weekNumber}` }, { status: 400 });
     }
 
-    // Push file to GitHub
-    try {
-      const result = await pushFileToRepo(
-        githubData.token,
-        githubData.username,
-        week.deliverable,
-        content,
-        `Week ${weekNumber} submission: ${week.title}`,
-      );
+    console.log(`[Submit] Pushing for ${githubData.username}, week ${weekNumber}`);
 
-      return Response.json({
-        success: true,
-        commitSha: result.sha,
-        url: result.url,
-      });
-    } catch (err) {
-      if (err instanceof Error && err.message === 'NEEDS_RELINK') {
-        return Response.json(
-          {
-            error: 'Your GitHub token needs repo access. Please re-link your GitHub account.',
-            needsRelink: true,
-          },
-          { status: 403 },
-        );
-      }
-      throw err;
-    }
+    // Push file using App installation token (not user token)
+    const result = await pushFileToRepo(
+      githubData.username,
+      week.deliverable,
+      content,
+      `Week ${weekNumber} submission: ${week.title} (by ${githubData.username})`,
+    );
+
+    return Response.json({
+      success: true,
+      commitSha: result.sha,
+      url: result.url,
+    });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Internal error';
+    console.error('[Submit] Error:', message);
     return Response.json({ error: message }, { status: 500 });
   }
 }

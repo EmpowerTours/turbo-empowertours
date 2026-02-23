@@ -1,15 +1,16 @@
-import { createHmac, timingSafeEqual } from 'crypto';
+import { createHmac, createSign, timingSafeEqual } from 'crypto';
 
 const GITHUB_CLIENT_ID = process.env.GITHUB_APP_CLIENT_ID || '';
 const GITHUB_CLIENT_SECRET = process.env.GITHUB_APP_CLIENT_SECRET || '';
 const GITHUB_WEBHOOK_SECRET = process.env.GITHUB_WEBHOOK_SECRET || '';
 const GITHUB_STATE_SECRET = process.env.GITHUB_STATE_SECRET || '';
+const GITHUB_APP_ID = process.env.GITHUB_APP_ID || '';
+const GITHUB_APP_PRIVATE_KEY = (process.env.GITHUB_APP_PRIVATE_KEY || '').replace(/\\n/g, '\n');
+const GITHUB_APP_INSTALLATION_ID = process.env.GITHUB_APP_INSTALLATION_ID || '';
 
 /** Build the GitHub OAuth URL */
 export function buildOAuthUrl(wallet: string, redirectUri: string): string {
   const state = signState(wallet);
-  // GitHub Apps derive permissions from the App's settings, not OAuth scopes.
-  // The scope param is not used here — set Contents: Read & Write on the App.
   const params = new URLSearchParams({
     client_id: GITHUB_CLIENT_ID,
     redirect_uri: redirectUri,
@@ -94,10 +95,63 @@ export async function checkFileExists(
   return res.ok;
 }
 
-/** Push (create or update) a file to a GitHub repo via Contents API.
- *  Pushes to the student's subfolder under the org repo. */
+/** Generate a JWT for the GitHub App (valid 10 minutes) */
+function generateAppJWT(): string {
+  const now = Math.floor(Date.now() / 1000);
+  const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url');
+  const payload = Buffer.from(JSON.stringify({
+    iat: now - 60,
+    exp: now + 600,
+    iss: GITHUB_APP_ID,
+  })).toString('base64url');
+
+  const sign = createSign('RSA-SHA256');
+  sign.update(`${header}.${payload}`);
+  const signature = sign.sign(GITHUB_APP_PRIVATE_KEY, 'base64url');
+
+  return `${header}.${payload}.${signature}`;
+}
+
+/** Get an installation access token for the GitHub App */
+let _cachedInstallToken: { token: string; expiresAt: number } | null = null;
+
+async function getInstallationToken(): Promise<string> {
+  // Return cached token if still valid (with 5 min buffer)
+  if (_cachedInstallToken && _cachedInstallToken.expiresAt > Date.now() + 300_000) {
+    return _cachedInstallToken.token;
+  }
+
+  const jwt = generateAppJWT();
+  const res = await fetch(
+    `https://api.github.com/app/installations/${GITHUB_APP_INSTALLATION_ID}/access_tokens`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${jwt}`,
+        Accept: 'application/vnd.github.v3+json',
+      },
+    },
+  );
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    console.error('[GitHub] Failed to get installation token:', res.status, JSON.stringify(err));
+    throw new Error('Failed to get GitHub App installation token');
+  }
+
+  const data = await res.json();
+  _cachedInstallToken = {
+    token: data.token,
+    expiresAt: new Date(data.expires_at).getTime(),
+  };
+
+  console.log(`[GitHub] Got installation token, expires: ${data.expires_at}`);
+  return data.token;
+}
+
+/** Push (create or update) a file to the org repo using App installation token.
+ *  Each student's files go under students/{username}/{deliverable}. */
 export async function pushFileToRepo(
-  token: string,
   username: string,
   deliverable: string,
   content: string,
@@ -105,8 +159,10 @@ export async function pushFileToRepo(
 ): Promise<{ sha: string; url: string }> {
   const org = 'EmpowerTours';
   const repo = 'turbo-homework';
-  // Each student gets their own folder: students/{username}/{deliverable}
   const path = `students/${username}/${deliverable}`;
+
+  // Use App installation token instead of user token
+  const token = await getInstallationToken();
   const apiHeaders = {
     Authorization: `Bearer ${token}`,
     Accept: 'application/vnd.github.v3+json',
@@ -115,15 +171,9 @@ export async function pushFileToRepo(
 
   // Check if file already exists (need SHA for updates)
   const existingUrl = `https://api.github.com/repos/${org}/${repo}/contents/${path}`;
-  console.log(`[pushFile] GET ${existingUrl} (checking existing)`);
-  const existing = await fetch(existingUrl, {
-    headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github.v3+json' },
-  });
+  console.log(`[pushFile] GET ${existingUrl}`);
+  const existing = await fetch(existingUrl, { headers: apiHeaders });
   console.log(`[pushFile] Existing check: ${existing.status}`);
-
-  if (existing.status === 401) {
-    throw new Error('NEEDS_RELINK');
-  }
 
   const body: Record<string, string> = {
     message,
@@ -140,22 +190,10 @@ export async function pushFileToRepo(
   );
 
   console.log(`[pushFile] PUT response: ${res.status}`);
-  if (res.status === 401) {
-    throw new Error('NEEDS_RELINK');
-  }
-  if (res.status === 403) {
-    const errBody = await res.json().catch(() => ({}));
-    console.log(`[pushFile] 403 body:`, JSON.stringify(errBody));
-    throw new Error('NEEDS_RELINK');
-  }
-  if (res.status === 404) {
-    const errBody = await res.json().catch(() => ({}));
-    console.log(`[pushFile] 404 body:`, JSON.stringify(errBody));
-    throw new Error('Repository not found. Please contact support.');
-  }
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || 'Push failed');
+    const errBody = await res.json().catch(() => ({}));
+    console.error(`[pushFile] Error:`, JSON.stringify(errBody));
+    throw new Error(errBody.message || 'Push failed');
   }
 
   const result = await res.json();
