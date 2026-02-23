@@ -8,10 +8,11 @@ const GITHUB_STATE_SECRET = process.env.GITHUB_STATE_SECRET || '';
 /** Build the GitHub OAuth URL */
 export function buildOAuthUrl(wallet: string, redirectUri: string): string {
   const state = signState(wallet);
+  // GitHub Apps derive permissions from the App's settings, not OAuth scopes.
+  // The scope param is not used here — set Contents: Read & Write on the App.
   const params = new URLSearchParams({
     client_id: GITHUB_CLIENT_ID,
     redirect_uri: redirectUri,
-    scope: 'read:user,repo',
     state,
   });
   return `https://github.com/login/oauth/authorize?${params}`;
