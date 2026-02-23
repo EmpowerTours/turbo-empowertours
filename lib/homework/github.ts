@@ -94,15 +94,19 @@ export async function checkFileExists(
   return res.ok;
 }
 
-/** Push (create or update) a file to a GitHub repo via Contents API */
+/** Push (create or update) a file to a GitHub repo via Contents API.
+ *  Pushes to the student's subfolder under the org repo. */
 export async function pushFileToRepo(
   token: string,
-  owner: string,
+  username: string,
   deliverable: string,
   content: string,
   message: string,
 ): Promise<{ sha: string; url: string }> {
+  const org = 'EmpowerTours';
   const repo = 'turbo-homework';
+  // Each student gets their own folder: students/{username}/{deliverable}
+  const path = `students/${username}/${deliverable}`;
   const apiHeaders = {
     Authorization: `Bearer ${token}`,
     Accept: 'application/vnd.github.v3+json',
@@ -110,7 +114,7 @@ export async function pushFileToRepo(
   };
 
   // Check if file already exists (need SHA for updates)
-  const existingUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${deliverable}`;
+  const existingUrl = `https://api.github.com/repos/${org}/${repo}/contents/${path}`;
   console.log(`[pushFile] GET ${existingUrl} (checking existing)`);
   const existing = await fetch(existingUrl, {
     headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github.v3+json' },
@@ -131,15 +135,23 @@ export async function pushFileToRepo(
   }
 
   const res = await fetch(
-    `https://api.github.com/repos/${owner}/${repo}/contents/${deliverable}`,
+    `https://api.github.com/repos/${org}/${repo}/contents/${path}`,
     { method: 'PUT', headers: apiHeaders, body: JSON.stringify(body) },
   );
 
   console.log(`[pushFile] PUT response: ${res.status}`);
-  if (res.status === 401 || res.status === 403 || res.status === 404) {
-    const errBody = await res.json().catch(() => ({}));
-    console.log(`[pushFile] Error body:`, JSON.stringify(errBody));
+  if (res.status === 401) {
     throw new Error('NEEDS_RELINK');
+  }
+  if (res.status === 403) {
+    const errBody = await res.json().catch(() => ({}));
+    console.log(`[pushFile] 403 body:`, JSON.stringify(errBody));
+    throw new Error('NEEDS_RELINK');
+  }
+  if (res.status === 404) {
+    const errBody = await res.json().catch(() => ({}));
+    console.log(`[pushFile] 404 body:`, JSON.stringify(errBody));
+    throw new Error('Repository not found. Please contact support.');
   }
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));

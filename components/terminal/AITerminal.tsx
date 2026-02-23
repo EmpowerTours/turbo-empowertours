@@ -323,7 +323,7 @@ export default function AITerminal({ wallet, weekNumber }: AITerminalProps) {
               </div>
 
               <div className="ai-terminal-submit-file" style={{ borderColor: `${accentColor}20`, color: accentColor }}>
-                {weekNumber && `turbo-homework/${CURRICULUM.find(w => w.week === weekNumber)?.deliverable || `week-${String(weekNumber).padStart(2, '0')}/`}`}
+                {weekNumber && `students/you/${CURRICULUM.find(w => w.week === weekNumber)?.deliverable || `week-${String(weekNumber).padStart(2, '0')}/`}`}
               </div>
 
               <textarea
