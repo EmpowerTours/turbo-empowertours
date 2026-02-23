@@ -63,6 +63,7 @@ export async function POST(req: NextRequest) {
     const token = authHeader.slice(7);
 
     let wallet: string;
+    let allWallets: string[] = [];
     try {
       // Verify token and get user_id
       const claims = await privy.utils().auth().verifyAccessToken(token);
@@ -81,8 +82,12 @@ export async function POST(req: NextRequest) {
       const userData = await userRes.json() as {
         linked_accounts: { type: string; address?: string }[];
       };
+      // Collect ALL wallet addresses (external + embedded)
+      allWallets = userData.linked_accounts
+        .filter((a) => a.address)
+        .map((a) => a.address!.toLowerCase());
       const linkedWallet = userData.linked_accounts.find(
-        (a) => a.type === 'wallet' && a.address
+        (a) => a.address
       );
       if (!linkedWallet?.address) {
         return Response.json({ error: 'No wallet linked' }, { status: 401 });
@@ -102,11 +107,11 @@ export async function POST(req: NextRequest) {
       return Response.json({ error: 'Missing messages' }, { status: 400 });
     }
 
-    // Detect owner — wallet is cryptographically verified via Privy
+    // Detect owner — check ALL linked wallets against owner list + on-chain owner
     const OWNER_WALLETS = [
       '0x23e2222735084b32338bBeCCCcd37A38663691ae'.toLowerCase(),
     ];
-    let isOwner = OWNER_WALLETS.includes(wallet.toLowerCase());
+    let isOwner = allWallets.some(w => OWNER_WALLETS.includes(w));
     if (!isOwner) {
       try {
         const contractOwner = await publicClient.readContract({
@@ -114,7 +119,8 @@ export async function POST(req: NextRequest) {
           abi: TURBO_GOVERNANCE_ABI,
           functionName: 'owner',
         });
-        isOwner = wallet.toLowerCase() === (contractOwner as string).toLowerCase();
+        const ownerAddr = (contractOwner as string).toLowerCase();
+        isOwner = allWallets.some(w => w === ownerAddr);
       } catch {
         // If contract call fails, default to student mode
       }
