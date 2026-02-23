@@ -1,0 +1,67 @@
+/* ── Homework-specific styles ── */
+
+.turbo-page .hw-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.turbo-page .hw-week-card {
+  position: relative;
+  border: 1px solid #1c1c22;
+  border-radius: 12px;
+  background: #0a0a0f;
+  padding: 16px;
+  transition: border-color 0.3s, transform 0.2s;
+}
+.turbo-page .hw-week-card:hover {
+  border-color: #27272a;
+  transform: translateY(-2px);
+}
+.turbo-page .hw-week-card.completed {
+  border-color: rgba(34, 197, 94, 0.2);
+  background: rgba(34, 197, 94, 0.02);
+}
+.turbo-page .hw-week-card.milestone {
+  border-width: 2px;
+}
+
+.turbo-page .hw-progress-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: #18181b;
+  overflow: hidden;
+}
+.turbo-page .hw-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #06b6d4, #8b5cf6);
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.turbo-page .hw-badge-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.turbo-page .hw-badge-card {
+  border: 1px solid #1c1c22;
+  border-radius: 12px;
+  background: #0a0a0f;
+  padding: 20px;
+  text-align: center;
+  transition: border-color 0.3s;
+}
+.turbo-page .hw-badge-card.earned {
+  border-color: rgba(34, 197, 94, 0.3);
+  background: rgba(34, 197, 94, 0.03);
+}
+
+.turbo-page .hw-phase-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding-top: 24px;
+}

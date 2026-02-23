@@ -380,6 +380,22 @@ export default function StatusPage() {
 
   return (
     <div className="turbo-page">
+      {/* Top nav */}
+      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-[#060608]/80 backdrop-blur-md border-b border-zinc-900/50">
+        <a href="/" className="syne text-sm font-bold gt">TURBO</a>
+        <div className="flex items-center gap-4">
+          <a href="/homework" className="syne text-[11px] font-semibold tracking-[0.1em] uppercase text-zinc-500 hover:text-cyan-400 transition-colors">
+            Homework
+          </a>
+          <a href="/governance" className="syne text-[11px] font-semibold tracking-[0.1em] uppercase text-zinc-500 hover:text-cyan-400 transition-colors">
+            Governance
+          </a>
+          <span className="syne text-[11px] font-semibold tracking-[0.1em] uppercase text-cyan-400">
+            Status
+          </span>
+        </div>
+      </nav>
+
       <div className="min-h-screen flex flex-col items-center justify-start px-6 pt-20 pb-28 relative">
         <div className="orb" style={{ width: 500, height: 500, background: '#06b6d4', opacity: 0.06, top: '-10%', left: '20%' }} />
         <div className="orb" style={{ width: 400, height: 400, background: '#8b5cf6', opacity: 0.04, bottom: '10%', right: '15%' }} />

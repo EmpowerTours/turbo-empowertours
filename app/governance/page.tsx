@@ -444,6 +444,9 @@ export default function GovernancePage() {
         <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-[#060608]/80 backdrop-blur-md border-b border-zinc-900/50">
           <a href="/" className="syne text-sm font-bold gt">TURBO</a>
           <div className="flex items-center gap-4">
+            <a href="/homework" className="syne text-[11px] font-semibold tracking-[0.1em] uppercase text-zinc-500 hover:text-cyan-400 transition-colors">
+              Homework
+            </a>
             <a href="/status" className="syne text-[11px] font-semibold tracking-[0.1em] uppercase text-zinc-500 hover:text-cyan-400 transition-colors">
               Status
             </a>
