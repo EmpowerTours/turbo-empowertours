@@ -57,6 +57,9 @@ export default function HomeworkPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [activePhase, setActivePhase] = useState<string | null>(null);
+  const [claiming, setClaiming] = useState(false);
+  const [claimResult, setClaimResult] = useState<{ totalAmount: number; txHash: string; weeks: number[] } | null>(null);
+  const [claimError, setClaimError] = useState('');
 
   const fetchProgress = useCallback(async () => {
     if (!walletAddress) return;
@@ -80,6 +83,31 @@ export default function HomeworkPage() {
   useEffect(() => {
     if (walletAddress) fetchProgress();
   }, [walletAddress, fetchProgress]);
+
+  const handleClaim = async () => {
+    if (!walletAddress || claiming) return;
+    setClaiming(true);
+    setClaimError('');
+    setClaimResult(null);
+    try {
+      const res = await fetch('/api/homework/claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ wallet: walletAddress }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setClaimResult(json);
+        fetchProgress(); // refresh data
+      } else {
+        setClaimError(json.error || 'Claim failed');
+      }
+    } catch {
+      setClaimError('Network error');
+    } finally {
+      setClaiming(false);
+    }
+  };
 
   useEffect(() => {
     document.body.style.backgroundColor = '#060608';
@@ -270,12 +298,51 @@ export default function HomeworkPage() {
                     <div className="text-[10px] tracking-[0.15em] uppercase text-zinc-600 mb-1">Distributed</div>
                     <div className="syne text-2xl font-bold text-green-400">{data?.totalDistributed || 0}</div>
                   </div>
-                  <div className="p-5 rounded-2xl border border-zinc-800/60 bg-zinc-900/20">
-                    <div className="text-[10px] tracking-[0.15em] uppercase text-zinc-600 mb-1">Pending</div>
-                    <div className="syne text-2xl font-bold text-amber-400">{data?.pendingReward || 0}</div>
+                  <div className="p-5 rounded-2xl border bg-zinc-900/20" style={{ borderColor: (data?.pendingReward || 0) > 0 ? 'rgba(245,158,11,0.3)' : 'rgba(39,39,42,0.6)' }}>
+                    <div className="text-[10px] tracking-[0.15em] uppercase text-zinc-600 mb-1">Claimable</div>
+                    <div className="syne text-2xl font-bold text-amber-400 mb-2">{data?.pendingReward || 0}</div>
+                    {(data?.pendingReward || 0) > 0 && (
+                      <button
+                        onClick={handleClaim}
+                        disabled={claiming}
+                        className="w-full syne text-[10px] font-bold tracking-[0.08em] uppercase py-2 px-3 rounded-lg bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 transition-all border border-amber-500/20 cursor-pointer"
+                        style={{ opacity: claiming ? 0.6 : 1 }}
+                      >
+                        {claiming ? 'Claiming...' : 'Claim TOURS'}
+                      </button>
+                    )}
                   </div>
                 </div>
               </Reveal>
+
+              {/* Claim Result / Error */}
+              {claimResult && (
+                <Reveal>
+                  <div className="p-4 rounded-2xl border border-green-500/20 bg-green-500/[0.03] mb-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="syne text-sm font-bold text-green-400">Claimed {claimResult.totalAmount} TOURS</div>
+                        <p className="text-[11px] text-zinc-500 mt-1">
+                          Weeks {claimResult.weeks.join(', ')} rewarded
+                        </p>
+                      </div>
+                      <a
+                        href={`https://monadscan.com/tx/${claimResult.txHash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="syne text-[10px] font-bold tracking-[0.08em] uppercase py-2 px-4 rounded-lg bg-green-500/10 text-green-400 hover:brightness-110 transition-all"
+                      >
+                        View TX
+                      </a>
+                    </div>
+                  </div>
+                </Reveal>
+              )}
+              {claimError && (
+                <div className="p-3 rounded-xl border border-red-500/15 bg-red-500/[0.03] mb-6 text-center">
+                  <span className="text-red-400 text-[12px]">{claimError}</span>
+                </div>
+              )}
 
               {/* Progress Bar */}
               <Reveal delay={200}>
