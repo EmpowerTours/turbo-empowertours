@@ -155,7 +155,7 @@ export default function HomeworkPage() {
               <Reveal delay={100}>
                 <div className="p-6 rounded-2xl border border-zinc-800/60 bg-zinc-900/20 mb-6">
                   <div className="syne text-sm font-bold text-white mb-4">Get Started</div>
-                  <div className="grid sm:grid-cols-3 gap-4">
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     {/* Step 1: Link GitHub */}
                     <div className="p-4 rounded-xl border bg-zinc-900/30" style={{ borderColor: data?.github ? 'rgba(34,197,94,0.2)' : 'rgba(6,182,212,0.2)' }}>
                       <div className="flex items-center gap-2 mb-2">
@@ -163,7 +163,7 @@ export default function HomeworkPage() {
                           background: data?.github ? 'rgba(34,197,94,0.15)' : 'rgba(6,182,212,0.15)',
                           color: data?.github ? '#22c55e' : '#06b6d4',
                         }}>
-                          {data?.github ? '✓' : '1'}
+                          {data?.github ? '\u2713' : '1'}
                         </div>
                         <span className="syne text-[12px] font-bold text-white">Link GitHub</span>
                       </div>
@@ -210,16 +210,39 @@ export default function HomeworkPage() {
                       </a>
                     </div>
 
-                    {/* Step 3: Push Work */}
+                    {/* Step 3: Install App */}
+                    <div className="p-4 rounded-xl border border-zinc-800/40 bg-zinc-900/30">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] syne font-bold" style={{
+                          background: 'rgba(34,197,94,0.15)',
+                          color: '#22c55e',
+                        }}>3</div>
+                        <span className="syne text-[12px] font-bold text-white">Install App</span>
+                      </div>
+                      <p className="text-[11px] text-zinc-600 leading-relaxed mb-2">Install the TURBO app on your fork to enable auto-verification.</p>
+                      <a
+                        href="https://github.com/apps/empowertours-turbo/installations/new"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 syne text-[10px] font-bold tracking-[0.08em] uppercase py-2 px-4 rounded-lg bg-green-500/10 text-green-400 hover:brightness-110 transition-all"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        </svg>
+                        Install App
+                      </a>
+                    </div>
+
+                    {/* Step 4: Push Work */}
                     <div className="p-4 rounded-xl border border-zinc-800/40 bg-zinc-900/30">
                       <div className="flex items-center gap-2 mb-2">
                         <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] syne font-bold" style={{
                           background: 'rgba(245,158,11,0.15)',
                           color: '#f59e0b',
-                        }}>3</div>
+                        }}>4</div>
                         <span className="syne text-[12px] font-bold text-white">Complete & Push</span>
                       </div>
-                      <p className="text-[11px] text-zinc-600 leading-relaxed mb-2">Complete each week&apos;s assignment and push to your fork. Auto-verified via webhook.</p>
+                      <p className="text-[11px] text-zinc-600 leading-relaxed mb-2">Push your work — auto-verified via webhook.</p>
                       <div className="p-2 rounded-lg bg-zinc-800/30 border border-zinc-800/40">
                         <code className="text-[10px] text-cyan-400/70 font-mono block leading-relaxed">
                           git add week-01/profile.md<br/>
