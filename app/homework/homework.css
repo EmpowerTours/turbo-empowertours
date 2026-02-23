@@ -22,6 +22,10 @@
   border-color: rgba(34, 197, 94, 0.2);
   background: rgba(34, 197, 94, 0.02);
 }
+.turbo-page .hw-week-card.selected {
+  border-color: rgba(6, 182, 212, 0.4);
+  background: rgba(6, 182, 212, 0.03);
+}
 .turbo-page .hw-week-card.milestone {
   border-width: 2px;
 }

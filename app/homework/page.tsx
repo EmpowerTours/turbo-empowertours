@@ -58,6 +58,7 @@ export default function HomeworkPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [activePhase, setActivePhase] = useState<string | null>(null);
+  const [selectedWeek, setSelectedWeek] = useState<number | null>(null);
   const [claiming, setClaiming] = useState(false);
   const [claimResult, setClaimResult] = useState<{ totalAmount: number; txHash: string; weeks: number[] } | null>(null);
   const [claimError, setClaimError] = useState('');
@@ -457,8 +458,9 @@ export default function HomeworkPage() {
                               return (
                                 <div
                                   key={entry.week}
-                                  className={`hw-week-card ${isCompleted ? 'completed' : ''} ${isMilestone ? 'milestone' : ''}`}
-                                  style={isMilestone ? { borderColor: `${color}40` } : undefined}
+                                  className={`hw-week-card ${isCompleted ? 'completed' : ''} ${isMilestone ? 'milestone' : ''} ${selectedWeek === entry.week ? 'selected' : ''}`}
+                                  style={isMilestone ? { borderColor: `${color}40` } : selectedWeek === entry.week ? { borderColor: `${color}60`, cursor: 'pointer' } : { cursor: 'pointer' }}
+                                  onClick={() => setSelectedWeek(selectedWeek === entry.week ? null : entry.week)}
                                 >
                                   <div className="flex items-center justify-between mb-2">
                                     <span className="syne text-[10px] tracking-[0.15em] uppercase text-zinc-600 font-semibold">
@@ -548,11 +550,12 @@ export default function HomeworkPage() {
       <AITerminal
         wallet={walletAddress}
         weekNumber={
-          activePhase
-            ? (phases[activePhase]?.find(w => !completedSet.has(w.week))?.week ??
-               phases[activePhase]?.[0]?.week ??
-               null)
-            : null
+          selectedWeek
+            ?? (activePhase
+              ? (phases[activePhase]?.find(w => !completedSet.has(w.week))?.week ??
+                 phases[activePhase]?.[0]?.week ??
+                 null)
+              : null)
         }
       />
     </div>

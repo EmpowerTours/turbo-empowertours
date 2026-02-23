@@ -1,36 +1,38 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TURBO by EmpowerTours
 
-## Getting Started
+**Live:** [https://turbo-empowertours-production.up.railway.app](https://turbo-empowertours-production.up.railway.app/)
 
-First, run the development server:
+TURBO is a 12-month Web3 accelerator for LATAM founders, built on [Monad](https://monad.xyz). Members pay monthly via the TurboCohort smart contract, complete a 52-week curriculum, and earn TOURS tokens for homework completions.
+
+## Features
+
+- **TurboCohort V6** — Soulbound NFT membership with tiered pricing (Explorer/Builder/Founder)
+- **52-Week Homework System** — GitHub-integrated curriculum from dev basics to startup building
+- **On-chain Governance** — Council-based proposal system for founder selection
+- **EmpowerTours Passport** — Country-specific soulbound identity NFTs
+- **TOURS Token Rewards** — Earn tokens for weekly homework completions + milestone bonuses
+
+## Stack
+
+- **Frontend:** Next.js 15, React, Tailwind CSS, Privy auth
+- **Chain:** Monad (Chain ID 143)
+- **Data:** Upstash Redis
+- **Deploy:** Railway
+
+## Contracts (Monad Mainnet)
+
+| Contract | Address |
+|----------|---------|
+| TurboCohortV6 | `0xEae06514a0d3daf610cC0778B27f387018521Ab5` |
+| TurboGovernance | `0x9e7A91D9F891373DD0846f443E4484EfA12c4899` |
+| EmpowerTours Passport | `0x93126e59004692b01961be505aa04f55d5bd1851` |
+| TOURS Token | `0x45b76a127167fD7FC7Ed264ad490144300eCfcBF` |
+
+## Development
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Open [http://localhost:3000](http://localhost:3000).
