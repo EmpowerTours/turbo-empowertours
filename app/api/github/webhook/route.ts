@@ -19,16 +19,6 @@ export async function POST(req: NextRequest) {
     }
 
     const payload = JSON.parse(body);
-    const pusher = payload.pusher?.name?.toLowerCase();
-    if (!pusher) {
-      return NextResponse.json({ ok: true, skipped: true });
-    }
-
-    // Look up wallet from GitHub username
-    const wallet = await redis.get(`hw:wallet:${pusher}`) as string | null;
-    if (!wallet) {
-      return NextResponse.json({ ok: true, message: 'Unknown user' });
-    }
 
     // Collect all file paths from commits
     const files = new Set<string>();
@@ -38,38 +28,68 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Check against curriculum deliverables
+    if (files.size === 0) {
+      return NextResponse.json({ ok: true, skipped: true });
+    }
+
+    // Extract student usernames from file paths (students/{username}/...)
+    // and also support direct pusher lookup for manual git pushes
+    const studentUsernames = new Set<string>();
+    for (const f of files) {
+      const match = f.match(/^students\/([^/]+)\//);
+      if (match) {
+        studentUsernames.add(match[1].toLowerCase());
+      }
+    }
+
+    // Also check pusher name for backwards compat (manual git push)
+    const pusher = payload.pusher?.name?.toLowerCase();
+    if (pusher) {
+      studentUsernames.add(pusher);
+    }
+
+    // Process each student found in the push
     let matched = 0;
-    for (const entry of CURRICULUM) {
-      const weekKey = `${entry.week}`;
+    for (const username of studentUsernames) {
+      const wallet = await redis.get(`hw:wallet:${username}`) as string | null;
+      if (!wallet) {
+        console.log(`[Homework] No wallet found for GitHub user: ${username}`);
+        continue;
+      }
 
-      // Skip if already completed
-      const existing = await redis.hget(`hw:progress:${wallet}`, `week-${weekKey}`);
-      if (existing) continue;
+      for (const entry of CURRICULUM) {
+        const weekKey = `${entry.week}`;
 
-      // Check if any committed file matches the deliverable
-      const deliverable = entry.deliverable;
-      const hasMatch = Array.from(files).some(f => f.endsWith(deliverable) || f.includes(deliverable));
+        // Skip if already completed
+        const existing = await redis.hget(`hw:progress:${wallet}`, `week-${weekKey}`);
+        if (existing) continue;
 
-      if (hasMatch) {
-        const now = new Date().toISOString();
-        const commitSha = payload.after || payload.commits?.[0]?.id || '';
+        // Check if any committed file matches the deliverable
+        const deliverable = entry.deliverable;
+        const hasMatch = Array.from(files).some(f =>
+          f.endsWith(deliverable) || f.includes(deliverable)
+        );
 
-        // Mark completed
-        await redis.hset(`hw:progress:${wallet}`, {
-          [`week-${weekKey}`]: JSON.stringify({ completedAt: now, commitSha, verified: true }),
-        });
-        await redis.sadd(`hw:completed:${wallet}`, weekKey);
+        if (hasMatch) {
+          const now = new Date().toISOString();
+          const commitSha = payload.after || payload.commits?.[0]?.id || '';
 
-        // Add to pending rewards
-        const reward = getWeekReward(entry.week);
-        await redis.sadd(`hw:pending-reward:${weekKey}`, wallet);
+          // Mark completed
+          await redis.hset(`hw:progress:${wallet}`, {
+            [`week-${weekKey}`]: JSON.stringify({ completedAt: now, commitSha, verified: true }),
+          });
+          await redis.sadd(`hw:completed:${wallet}`, weekKey);
 
-        // Update leaderboard
-        await redis.zincrby('hw:leaderboard', 1, wallet);
+          // Add to pending rewards
+          const reward = getWeekReward(entry.week);
+          await redis.sadd(`hw:pending-reward:${weekKey}`, wallet);
 
-        matched++;
-        console.log(`[Homework] Week ${entry.week} completed by ${wallet} (${pusher}), reward: ${reward} TOURS`);
+          // Update leaderboard
+          await redis.zincrby('hw:leaderboard', 1, wallet);
+
+          matched++;
+          console.log(`[Homework] Week ${entry.week} completed by ${wallet} (${username}), reward: ${reward} TOURS`);
+        }
       }
     }
 
