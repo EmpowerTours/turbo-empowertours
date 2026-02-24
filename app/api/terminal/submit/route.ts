@@ -32,8 +32,6 @@ export async function POST(req: NextRequest) {
       return Response.json({ error: `Invalid week number: ${weekNumber}` }, { status: 400 });
     }
 
-    console.log(`[Submit] Pushing for ${githubData.username}, week ${weekNumber}`);
-
     // Push file using App installation token (not user token)
     const result = await pushFileToRepo(
       githubData.username,
@@ -49,7 +47,6 @@ export async function POST(req: NextRequest) {
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Internal error';
-    console.error('[Submit] Error:', message);
     return Response.json({ error: message }, { status: 500 });
   }
 }

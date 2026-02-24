@@ -145,7 +145,6 @@ async function getInstallationToken(): Promise<string> {
     expiresAt: new Date(data.expires_at).getTime(),
   };
 
-  console.log(`[GitHub] Got installation token, expires: ${data.expires_at}`);
   return data.token;
 }
 
@@ -170,10 +169,10 @@ export async function pushFileToRepo(
   };
 
   // Check if file already exists (need SHA for updates)
-  const existingUrl = `https://api.github.com/repos/${org}/${repo}/contents/${path}`;
-  console.log(`[pushFile] GET ${existingUrl}`);
-  const existing = await fetch(existingUrl, { headers: apiHeaders });
-  console.log(`[pushFile] Existing check: ${existing.status}`);
+  const existing = await fetch(
+    `https://api.github.com/repos/${org}/${repo}/contents/${path}`,
+    { headers: apiHeaders },
+  );
 
   const body: Record<string, string> = {
     message,
@@ -189,10 +188,8 @@ export async function pushFileToRepo(
     { method: 'PUT', headers: apiHeaders, body: JSON.stringify(body) },
   );
 
-  console.log(`[pushFile] PUT response: ${res.status}`);
   if (!res.ok) {
     const errBody = await res.json().catch(() => ({}));
-    console.error(`[pushFile] Error:`, JSON.stringify(errBody));
     throw new Error(errBody.message || 'Push failed');
   }
 
