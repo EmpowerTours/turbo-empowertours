@@ -31,7 +31,18 @@ export default function VideoBackground({ src }: VideoBackgroundProps) {
       return;
     }
 
-    if (Hls.isSupported()) {
+    // Prefer native HLS (Safari/iOS) — avoids MSE conflicts
+    if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = src;
+      const onLoaded = () => video.play().catch(() => {});
+      video.addEventListener('loadedmetadata', onLoaded);
+      return () => {
+        video.removeEventListener('loadedmetadata', onLoaded);
+        video.pause();
+        video.removeAttribute('src');
+        video.load();
+      };
+    } else if (Hls.isSupported()) {
       const hls = new Hls({
         enableWorker: true,
         maxBufferLength: 10,
@@ -46,16 +57,6 @@ export default function VideoBackground({ src }: VideoBackgroundProps) {
       return () => {
         hls.destroy();
         hlsRef.current = null;
-      };
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      // Safari native HLS
-      video.src = src;
-      const onLoaded = () => video.play().catch(() => {});
-      video.addEventListener('loadedmetadata', onLoaded);
-      return () => {
-        video.removeEventListener('loadedmetadata', onLoaded);
-        video.removeAttribute('src');
-        video.load();
       };
     }
   }, [src, isActive]);
