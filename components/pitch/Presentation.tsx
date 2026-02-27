@@ -113,7 +113,10 @@ export default function Presentation({ slides }: PresentationProps) {
     <div
       ref={containerRef}
       className="relative w-screen h-screen overflow-hidden bg-black"
-      style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+      style={{
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+        textShadow: '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 0 8px rgba(0,0,0,0.5)',
+      }}
     >
       {slides.map((slide, index) => {
         const isActive = index === currentSlide;

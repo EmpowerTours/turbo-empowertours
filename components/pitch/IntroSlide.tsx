@@ -10,7 +10,7 @@ export default function IntroSlide() {
     <div className="relative w-full h-full overflow-hidden bg-black">
       <VideoBackground src={VIDEO_SRC} />
 
-      <div className="relative z-10 flex flex-col w-full h-full" style={{ color: 'white', textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}>
+      <div className="relative z-10 flex flex-col w-full h-full" style={{ color: 'white' }}>
         {/* Header */}
         <div
           className="flex items-center justify-between"
