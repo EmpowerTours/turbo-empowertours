@@ -1,0 +1,268 @@
+/* ── Spawn survey ──
+   A field tool. It gets used one-handed, outdoors, in Guerrero sun, so the
+   numbers that matter are large and high contrast and the controls are thumb
+   sized. Everything else is deliberately plain. */
+
+.survey {
+  --c: #06b6d4;
+  --p: #8b5cf6;
+  --a: #f59e0b;
+  --ok: #22c55e;
+  --bad: #ef4444;
+  --line: #27272a;
+  font-family: 'DM Sans', sans-serif;
+  background: #060608;
+  color: #e4e4e7;
+  min-height: 100vh;
+  line-height: 1.55;
+  padding: 1.25rem 1rem 4rem;
+  max-width: 46rem;
+  margin: 0 auto;
+}
+
+.survey *,
+.survey *::before,
+.survey *::after {
+  box-sizing: border-box;
+}
+
+.survey-head h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.75rem;
+  margin: 0 0 0.4rem;
+  background: linear-gradient(135deg, var(--c), var(--p));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.survey-head p {
+  margin: 0;
+  color: #a1a1aa;
+  font-size: 0.9rem;
+}
+.survey code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85em;
+  color: var(--c);
+}
+
+.survey section {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  background: #0b0b0f;
+}
+
+.survey h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1rem;
+  margin: 0 0 0.75rem;
+  color: #f4f4f5;
+}
+
+/* ── Live fix ── */
+
+.survey-fix {
+  border-left: 3px solid var(--line);
+}
+.survey-fix.quality-waiting {
+  border-left-color: var(--a);
+}
+.survey-fix.quality-rough {
+  border-left-color: var(--a);
+}
+.survey-fix.quality-good {
+  border-left-color: var(--ok);
+}
+
+.survey-idle p {
+  margin: 0 0 0.75rem;
+  color: #a1a1aa;
+}
+
+.survey-readout {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  gap: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+}
+.survey-readout .label {
+  display: block;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #71717a;
+}
+.survey-readout .value {
+  display: block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 1.35rem;
+  font-variant-numeric: tabular-nums;
+  color: #fafafa;
+}
+.survey-readout .value small {
+  font-size: 0.75rem;
+  color: #71717a;
+}
+
+.survey-verdict {
+  margin: 0 0 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.quality-waiting .survey-verdict,
+.quality-rough .survey-verdict {
+  color: var(--a);
+}
+.quality-good .survey-verdict {
+  color: var(--ok);
+}
+
+.survey-error {
+  margin: 0.6rem 0 0;
+  color: var(--bad);
+  font-size: 0.85rem;
+}
+.survey-warn {
+  display: block;
+  color: var(--a);
+  font-size: 0.78rem;
+  margin-top: 0.25rem;
+}
+.survey-note {
+  margin: 0.6rem 0 0;
+  color: #71717a;
+  font-size: 0.78rem;
+}
+
+/* ── Buttons ── */
+
+.survey-btn {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: #18181b;
+  color: #e4e4e7;
+  font: inherit;
+  font-weight: 600;
+  padding: 0.7rem 1.1rem;
+  border-radius: 0.55rem;
+  cursor: pointer;
+  min-height: 2.75rem;
+  transition: filter 0.15s ease;
+}
+.survey-btn:hover:not(:disabled) {
+  filter: brightness(1.25);
+}
+.survey-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.survey-btn.primary {
+  width: 100%;
+  border: none;
+  background: linear-gradient(135deg, var(--c), var(--p));
+  color: #06060a;
+}
+.survey-btn.ghost {
+  background: transparent;
+}
+.survey-btn.tiny {
+  min-height: auto;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #a1a1aa;
+}
+
+/* ── Form ── */
+
+.survey-form label {
+  display: block;
+  margin-bottom: 0.85rem;
+}
+.survey-form label > span {
+  display: block;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #71717a;
+  margin-bottom: 0.3rem;
+}
+.survey-form input,
+.survey-form textarea {
+  width: 100%;
+  background: #060608;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  color: #fafafa;
+  font: inherit;
+  /* 16px keeps iOS Safari from zooming the whole page on focus. */
+  font-size: 1rem;
+  padding: 0.6rem 0.7rem;
+}
+.survey-form input:focus,
+.survey-form textarea:focus {
+  outline: none;
+  border-color: var(--c);
+}
+.survey-form textarea {
+  resize: vertical;
+}
+.survey-slug {
+  display: block;
+  margin-top: 0.25rem;
+  color: #71717a;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.75rem;
+}
+
+.survey-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.survey-row label {
+  flex: 1 1 5.5rem;
+}
+
+/* ── Captured list ── */
+
+.survey-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.survey-list li {
+  padding: 0.7rem 0;
+  border-top: 1px solid var(--line);
+}
+.survey-list li:first-child {
+  border-top: none;
+}
+.survey-item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.survey-list small {
+  display: block;
+  color: #71717a;
+  font-size: 0.78rem;
+}
+
+/* ── Export ── */
+
+.survey-export pre {
+  background: #060608;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  overflow-x: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: #d4d4d8;
+  margin: 0 0 0.75rem;
+}
