@@ -191,18 +191,18 @@ export default function HomeworkPage() {
           <span className="syne text-[11px] font-semibold tracking-[0.1em] uppercase text-cyan-400">
             Homework
           </span>
-          <a
+          <Link
             href="/governance"
             className="syne text-[11px] font-semibold tracking-[0.1em] uppercase text-zinc-500 hover:text-cyan-400 transition-colors"
           >
             Governance
-          </a>
-          <a
+          </Link>
+          <Link
             href="/status"
             className="syne text-[11px] font-semibold tracking-[0.1em] uppercase text-zinc-500 hover:text-cyan-400 transition-colors"
           >
             Pay here
-          </a>
+          </Link>
         </div>
       </nav>
 
@@ -867,12 +867,12 @@ export default function HomeworkPage() {
       <footer className="py-12 px-6 border-t border-zinc-900/50">
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <a
+            <Link
               href="/"
               className="syne text-sm font-bold gt hover:opacity-80 transition-opacity"
             >
               TURBO
-            </a>
+            </Link>
             <span className="text-zinc-800 text-xs">by EmpowerTours</span>
           </div>
           <div className="flex items-center gap-4 text-[11px] text-zinc-800">

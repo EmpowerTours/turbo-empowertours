@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 
 import { useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import { usePrivy, useWallets } from '@privy-io/react-auth';
@@ -442,14 +443,14 @@ export default function GovernancePage() {
       <div className="relative z-10 max-w-5xl mx-auto px-6 pt-20 pb-28">
         {/* Top nav */}
         <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-[#060608]/80 backdrop-blur-md border-b border-zinc-900/50">
-          <a href="/" className="syne text-sm font-bold gt">TURBO</a>
+          <Link href="/" className="syne text-sm font-bold gt">TURBO</Link>
           <div className="flex items-center gap-4">
-            <a href="/homework" className="syne text-[11px] font-semibold tracking-[0.1em] uppercase text-zinc-500 hover:text-cyan-400 transition-colors">
+            <Link href="/homework" className="syne text-[11px] font-semibold tracking-[0.1em] uppercase text-zinc-500 hover:text-cyan-400 transition-colors">
               Homework
-            </a>
-            <a href="/status" className="syne text-[11px] font-semibold tracking-[0.1em] uppercase text-zinc-500 hover:text-cyan-400 transition-colors">
+            </Link>
+            <Link href="/status" className="syne text-[11px] font-semibold tracking-[0.1em] uppercase text-zinc-500 hover:text-cyan-400 transition-colors">
               Status
-            </a>
+            </Link>
             <span className="syne text-[11px] font-semibold tracking-[0.1em] uppercase text-cyan-400">
               Governance
             </span>
@@ -520,7 +521,7 @@ export default function GovernancePage() {
                   <p className="text-zinc-500 text-[13px] leading-relaxed mb-3">
                     To participate in TURBO governance, you must hold an <span className="text-amber-400 font-medium">EmpowerTours Passport NFT</span>. LATAM passports preferred, but all countries welcome.
                   </p>
-                  <a
+                  <Link
                     href="/passport"
                     className="inline-flex items-center gap-2 syne text-[11px] font-bold tracking-[0.08em] uppercase py-2 px-4 rounded-lg bg-amber-500/10 text-amber-400 hover:brightness-110 transition-all"
                   >
@@ -528,7 +529,7 @@ export default function GovernancePage() {
                     <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                       <path d="M3 9L9 3M9 3H4.5M9 3V7.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
-                  </a>
+                  </Link>
                 </div>
               </div>
             </div>
@@ -886,7 +887,7 @@ export default function GovernancePage() {
       <footer className="py-12 px-6 border-t border-zinc-900/50">
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <a href="/" className="syne text-sm font-bold gt hover:opacity-80 transition-opacity">TURBO</a>
+            <Link href="/" className="syne text-sm font-bold gt hover:opacity-80 transition-opacity">TURBO</Link>
             <span className="text-zinc-800 text-xs">by EmpowerTours</span>
           </div>
           <div className="flex items-center gap-4 text-[11px] text-zinc-800">

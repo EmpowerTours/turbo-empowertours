@@ -439,12 +439,12 @@ export default function StatusPage() {
                     <div className="text-zinc-600 text-sm py-8">Loading NFT card...</div>
                   )}
                   <div className="flex gap-3 justify-center mt-4">
-                    <a
+                    <Link
                       href="/governance"
                       className="inline-block text-[11px] syne font-bold tracking-[0.08em] uppercase py-2 px-4 rounded-lg bg-cyan-500/10 text-cyan-400 hover:brightness-110 transition-all"
                     >
                       Governance
-                    </a>
+                    </Link>
                     <a
                       href={`https://monadscan.com/address/${TURBO_COHORT_ADDRESS}`}
                       target="_blank"

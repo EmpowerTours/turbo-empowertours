@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 
 import { useState, useEffect, useRef, useCallback, type ReactNode } from 'react';
 import { usePrivy, useWallets } from '@privy-io/react-auth';
@@ -420,15 +421,15 @@ export default function TurboPage() {
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-[#060608]/80 backdrop-blur-md border-b border-zinc-900/50">
         <span className="syne text-sm font-bold gt">TURBO</span>
         <div className="flex items-center gap-4">
-          <a href="/homework" className="syne text-[11px] font-semibold tracking-[0.1em] uppercase text-zinc-500 hover:text-cyan-400 transition-colors">
+          <Link href="/homework" className="syne text-[11px] font-semibold tracking-[0.1em] uppercase text-zinc-500 hover:text-cyan-400 transition-colors">
             Homework
-          </a>
-          <a href="/governance" className="syne text-[11px] font-semibold tracking-[0.1em] uppercase text-zinc-500 hover:text-cyan-400 transition-colors">
+          </Link>
+          <Link href="/governance" className="syne text-[11px] font-semibold tracking-[0.1em] uppercase text-zinc-500 hover:text-cyan-400 transition-colors">
             Governance
-          </a>
-          <a href="/status" className="syne text-[11px] font-semibold tracking-[0.1em] uppercase text-zinc-500 hover:text-cyan-400 transition-colors">
+          </Link>
+          <Link href="/status" className="syne text-[11px] font-semibold tracking-[0.1em] uppercase text-zinc-500 hover:text-cyan-400 transition-colors">
             Pay here
-          </a>
+          </Link>
         </div>
       </nav>
 
@@ -1365,9 +1366,9 @@ export default function TurboPage() {
                 </p>
                 <p className="text-zinc-600 text-xs">
                   You can return to pay anytime at{' '}
-                  <a href="/status" className="text-cyan-500 hover:text-cyan-400 transition-colors underline underline-offset-2">
+                  <Link href="/status" className="text-cyan-500 hover:text-cyan-400 transition-colors underline underline-offset-2">
                     /status
-                  </a>
+                  </Link>
                 </p>
               </div>
 
@@ -1453,7 +1454,7 @@ export default function TurboPage() {
                           <div className="text-amber-400 text-sm text-center p-4 rounded-lg bg-amber-500/5 border border-amber-500/10">
                             <div className="syne font-bold text-[12px] mb-1">EmpowerTours Passport Required</div>
                             <p className="text-[11px] text-zinc-500 mb-2">You need an EmpowerTours Passport NFT to participate in TURBO. LATAM preferred, all countries welcome.</p>
-                            <a href="/passport" className="text-[11px] text-amber-400 underline underline-offset-2">Mint Passport</a>
+                            <Link href="/passport" className="text-[11px] text-amber-400 underline underline-offset-2">Mint Passport</Link>
                           </div>
                         )}
 
