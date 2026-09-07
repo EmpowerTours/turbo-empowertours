@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 
 import { useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import { usePrivy, useWallets } from '@privy-io/react-auth';
@@ -186,11 +187,11 @@ export default function PassportPage() {
       <div className="relative z-10 max-w-3xl mx-auto px-6 pt-20 pb-28">
         {/* Top nav bar */}
         <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-[#060608]/80 backdrop-blur-md border-b border-zinc-900/50">
-          <a href="/" className="syne text-sm font-bold gt">TURBO</a>
+          <Link href="/" className="syne text-sm font-bold gt">TURBO</Link>
           <div className="flex items-center gap-4">
-            <a href="/homework" className="syne text-[11px] font-semibold tracking-[0.1em] uppercase text-zinc-500 hover:text-cyan-400 transition-colors">Homework</a>
-            <a href="/status" className="syne text-[11px] font-semibold tracking-[0.1em] uppercase text-zinc-500 hover:text-cyan-400 transition-colors">Status</a>
-            <a href="/governance" className="syne text-[11px] font-semibold tracking-[0.1em] uppercase text-zinc-500 hover:text-cyan-400 transition-colors">Governance</a>
+            <Link href="/homework" className="syne text-[11px] font-semibold tracking-[0.1em] uppercase text-zinc-500 hover:text-cyan-400 transition-colors">Homework</Link>
+            <Link href="/status" className="syne text-[11px] font-semibold tracking-[0.1em] uppercase text-zinc-500 hover:text-cyan-400 transition-colors">Status</Link>
+            <Link href="/governance" className="syne text-[11px] font-semibold tracking-[0.1em] uppercase text-zinc-500 hover:text-cyan-400 transition-colors">Governance</Link>
             <span className="syne text-[11px] font-semibold tracking-[0.1em] uppercase text-amber-400">Passport</span>
           </div>
         </nav>

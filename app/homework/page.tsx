@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   useState,
   useEffect,
@@ -183,9 +184,9 @@ export default function HomeworkPage() {
     <div className="turbo-page">
       {/* Top nav */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-[#060608]/80 backdrop-blur-md border-b border-zinc-900/50">
-        <a href="/" className="syne text-sm font-bold gt">
+        <Link href="/" className="syne text-sm font-bold gt">
           TURBO
-        </a>
+        </Link>
         <div className="flex items-center gap-4">
           <span className="syne text-[11px] font-semibold tracking-[0.1em] uppercase text-cyan-400">
             Homework

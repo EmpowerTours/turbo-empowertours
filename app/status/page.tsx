@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 
 import { useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import { usePrivy, useWallets } from '@privy-io/react-auth';
@@ -382,14 +383,14 @@ export default function StatusPage() {
     <div className="turbo-page">
       {/* Top nav */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-[#060608]/80 backdrop-blur-md border-b border-zinc-900/50">
-        <a href="/" className="syne text-sm font-bold gt">TURBO</a>
+        <Link href="/" className="syne text-sm font-bold gt">TURBO</Link>
         <div className="flex items-center gap-4">
-          <a href="/homework" className="syne text-[11px] font-semibold tracking-[0.1em] uppercase text-zinc-500 hover:text-cyan-400 transition-colors">
+          <Link href="/homework" className="syne text-[11px] font-semibold tracking-[0.1em] uppercase text-zinc-500 hover:text-cyan-400 transition-colors">
             Homework
-          </a>
-          <a href="/governance" className="syne text-[11px] font-semibold tracking-[0.1em] uppercase text-zinc-500 hover:text-cyan-400 transition-colors">
+          </Link>
+          <Link href="/governance" className="syne text-[11px] font-semibold tracking-[0.1em] uppercase text-zinc-500 hover:text-cyan-400 transition-colors">
             Governance
-          </a>
+          </Link>
           <span className="syne text-[11px] font-semibold tracking-[0.1em] uppercase text-cyan-400">
             Status
           </span>
@@ -404,9 +405,9 @@ export default function StatusPage() {
           {/* Header */}
           <Reveal>
             <div className="text-center mb-10">
-              <a href="/" className="inline-block mb-6">
+              <Link href="/" className="inline-block mb-6">
                 <span className="syne text-sm font-bold gt hover:opacity-80 transition-opacity">TURBO</span>
-              </a>
+              </Link>
               <Label color="#06b6d4">Application Status</Label>
               <h1 className="syne text-3xl md:text-4xl font-bold text-white mb-3">
                 Check your <span className="gt">status.</span>
@@ -738,7 +739,7 @@ export default function StatusPage() {
                             <div className="text-amber-400 text-sm text-center p-4 rounded-lg bg-amber-500/5 border border-amber-500/10">
                               <div className="syne font-bold text-[12px] mb-1">EmpowerTours Passport Required</div>
                               <p className="text-[11px] text-zinc-500 mb-2">You need an EmpowerTours Passport NFT to participate in TURBO. LATAM preferred, all countries welcome.</p>
-                              <a href="/passport" className="text-[11px] text-amber-400 underline underline-offset-2">Mint Passport</a>
+                              <Link href="/passport" className="text-[11px] text-amber-400 underline underline-offset-2">Mint Passport</Link>
                             </div>
                           )}
 
@@ -786,7 +787,7 @@ export default function StatusPage() {
       <footer className="py-12 px-6 border-t border-zinc-900/50">
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <a href="/" className="syne text-sm font-bold gt hover:opacity-80 transition-opacity">TURBO</a>
+            <Link href="/" className="syne text-sm font-bold gt hover:opacity-80 transition-opacity">TURBO</Link>
             <span className="text-zinc-800 text-xs">by EmpowerTours</span>
           </div>
           <div className="flex items-center gap-4 text-[11px] text-zinc-800">
