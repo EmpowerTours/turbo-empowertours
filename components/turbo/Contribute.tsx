@@ -27,6 +27,8 @@ export default function Contribute() {
   if (!mera.address || !account) return null;
 
   async function contribute() {
+    const acct = mera.account;
+    if (!acct) return;
     setErr(null);
     let value: bigint;
     try {
@@ -35,19 +37,19 @@ export default function Contribute() {
       setErr("Enter a valid amount");
       return;
     }
-    if (value <= 0n) {
+    if (value <= BigInt(0)) {
       setErr("Enter an amount");
       return;
     }
     setPhase("sending");
     try {
       const wc = createWalletClient({
-        account,
+        account: acct,
         chain: monad,
         transport: http(),
       });
       const hash = await wc.sendTransaction({
-        account,
+        account: acct,
         chain: monad,
         to: TURBO_TREASURY_ADDRESS,
         value,
