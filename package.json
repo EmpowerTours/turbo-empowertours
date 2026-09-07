@@ -13,8 +13,12 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",
+    "@category-labs/mera": "^0.2.0",
+    "@noble/curves": "^2.4.0",
     "@privy-io/node": "^0.9.0",
     "@privy-io/react-auth": "^3.14.1",
+    "@scure/bip32": "^1.7.0",
+    "@scure/bip39": "^1.6.0",
     "@upstash/redis": "^1.36.2",
     "hls.js": "^1.6.15",
     "next": "16.1.6",
