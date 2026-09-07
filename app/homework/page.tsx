@@ -10,6 +10,7 @@ import {
 } from "react";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
 import { useMeraWallet } from "@/lib/auth/mera-wallet";
+import Contribute from "@/components/turbo/Contribute";
 import { type Address } from "viem";
 import {
   CURRICULUM,
@@ -457,6 +458,12 @@ export default function HomeworkPage() {
                       </div>
                     </div>
                   </div>
+                </div>
+              </Reveal>
+
+              <Reveal delay={120}>
+                <div className="mb-6">
+                  <Contribute />
                 </div>
               </Reveal>
 

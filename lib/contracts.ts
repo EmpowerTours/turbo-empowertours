@@ -2,6 +2,10 @@ export const WMON_ADDRESS =
   "0x3bd359C1119dA7Da1D913D1C4D2B7c461115433A" as const;
 export const TURBO_COHORT_ADDRESS =
   "0xEae06514a0d3daf610cC0778B27f387018521Ab5" as const;
+// TurboCohort.treasury() — verified on-chain to accept native MON. Voluntary
+// contributions from hunters (optional, ungated) go here.
+export const TURBO_TREASURY_ADDRESS =
+  "0xf3b9D123E7Ac8C36FC9B5AB32135c665956725bA" as const;
 
 export const WMON_ABI = [
   {
