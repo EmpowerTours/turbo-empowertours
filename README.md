@@ -23,7 +23,7 @@ TURBO is a 12-month Web3 accelerator for LATAM founders, built on [Monad](https:
 
 | Contract | Address |
 |----------|---------|
-| TurboCohortV6 | `0xEae06514a0d3daf610cC0778B27f387018521Ab5` |
+| TurboCohortV7 | `0x13a63A60b0E0104911e845a7e944646045C1558F` |
 | TurboGovernance | `0x9e7A91D9F891373DD0846f443E4484EfA12c4899` |
 | EmpowerTours Passport | `0x93126e59004692b01961be505aa04f55d5bd1851` |
 | TOURS Token | `0x45b76a127167fD7FC7Ed264ad490144300eCfcBF` |
