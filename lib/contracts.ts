@@ -1,7 +1,11 @@
 export const WMON_ADDRESS =
   "0x3bd359C1119dA7Da1D913D1C4D2B7c461115433A" as const;
+// TurboCohortV7, deployed 2026-09-20 and verified on Monadscan. V6
+// (0xEae0…1Ab5) is retired: its cohort is ended and finalized and it holds no
+// WMON. V7 adds payMonthlyFor(address,uint8) behind a settler role, which is
+// what lets Hunt cache-find credit settle into real TURBO months.
 export const TURBO_COHORT_ADDRESS =
-  "0xEae06514a0d3daf610cC0778B27f387018521Ab5" as const;
+  "0x13a63A60b0E0104911e845a7e944646045C1558F" as const;
 // TurboCohort.treasury() — verified on-chain to accept native MON. Voluntary
 // contributions from hunters (optional, ungated) go here.
 export const TURBO_TREASURY_ADDRESS =
