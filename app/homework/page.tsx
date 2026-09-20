@@ -10,6 +10,7 @@ import {
 } from "react";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
 import { useMeraWallet } from "@/lib/auth/mera-wallet";
+import { WalletBadge } from "@/components/turbo/WalletBadge";
 import Contribute from "@/components/turbo/Contribute";
 import { type Address } from "viem";
 import {
@@ -278,6 +279,11 @@ export default function HomeworkPage() {
             </div>
           ) : (
             <>
+              {/* The address a hunter's TURBO credit is redeemed against. It was
+                  derivable but never shown, so nobody could prove which account
+                  was theirs. */}
+              <WalletBadge address={walletAddress} />
+
               {/* Getting Started Steps */}
               <Reveal delay={100}>
                 <div className="p-6 rounded-2xl border border-zinc-800/60 bg-zinc-900/20 mb-6">
